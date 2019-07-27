@@ -1,0 +1,48 @@
+simple_turtle: &simple_turtle
+  imu: false
+  lidar: false
+
+zero_twist: &zero_twist
+  twist:
+    linear: 0
+    angular: 0
+
+oswin: &oswin
+  oswin:
+    <<: *simple_turtle
+    pose:
+      position:
+        x: -20
+        y: 0
+      <<: *zero_twist
+
+stationary_kyle: &stationary_kyle
+  kyle:
+    <<: *simple_turtle
+    pose:
+      position:
+        x: 0
+        y: 0
+      <<: *zero_twist
+
+moving_kyle: &moving_kyle
+  kyle:
+    <<: *simple_turtle
+    pose:
+      position:
+        x: 0
+        y: 0
+      twist:
+        linear: 2
+        angular: 0
+
+world:
+  stationary:
+    turtles:
+      <<: *oswin
+      <<: *stationary_kyle
+  moving:
+    turtles:
+      <<: *oswin
+      <<: *moving_kyle
+

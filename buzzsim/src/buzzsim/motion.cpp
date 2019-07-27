@@ -14,6 +14,10 @@ Twist TwistLimits::limit(const Twist& twist) const
 
   return { new_linear, new_angular };
 }
+bool TwistLimits::operator==(const TwistLimits &other) const
+{
+  return linear == other.linear && angular == other.angular;
+}
 
 void Twist::apply(const Acceleration& acceleration, const TwistLimits& limits)
 {
@@ -71,6 +75,11 @@ void Pose::normalizeHeading()
   orientation = -M_PI + fmod(2 * M_PI + fmod(orientation + M_PI, 2 * M_PI), 2 * M_PI);
 }
 
+bool Pose::operator==(const Pose& other) const
+{
+  return position == other.position && orientation == other.orientation;
+}
+
 geometry_msgs::Pose Pose::toROSMsg() const
 {
   geometry_msgs::Pose msg{};
@@ -105,17 +114,36 @@ void State::apply(const Acceleration& acceleration, const Limits& limits)
   twist = limited_new_twist;
 }
 
+bool State::operator==(const State &other) const
+{
+  return pose == other.pose && twist == other.twist;
+}
+
 Acceleration AccelerationLimits::limit(const Acceleration& acceleration) const
 {
   double new_linear = std::clamp(acceleration.linear, -linear, linear);
   double new_angular = std::clamp(acceleration.angular, -angular, angular);
   return { new_linear, new_angular };
 }
+bool AccelerationLimits::operator==(const AccelerationLimits &other) const
+{
+  return linear == other.linear && angular == other.angular;
+}
+
+bool Acceleration::operator==(const Acceleration& other) const
+{
+  return linear == other.linear && angular == other.angular;
+}
 
 QPointF Position::toQPointF(int width, int height) const
 {
   // x is front, y is left.
   return { 0.5 * width - PIXELS_PER_M * y, 0.5 * height - PIXELS_PER_M * x };
+}
+
+bool Position::operator==(const Position &other) const
+{
+  return x == other.x && y == other.y;
 }
 
 std::ostream& operator<<(std::ostream& out, const Position& position)
@@ -151,5 +179,10 @@ std::ostream& operator<<(std::ostream& out, const State& state)
   out << std::fixed << std::setprecision(3);
   out << "State(" << state.pose << ", " << state.twist << ")";
   return out;
+}
+
+bool Limits::operator==(const Limits &other) const
+{
+  return acceleration == other.acceleration && twist == other.twist;
 }
 }  // namespace motion

@@ -19,15 +19,8 @@ BuzzsimFrame::BuzzsimFrame(QWidget *parent, Qt::WindowFlags f) : QFrame(parent, 
 
   connect(update_timer_, SIGNAL(timeout()), this, SLOT(onUpdate()));
 
-  motion::AccelerationLimits acceleration_limits{ 2.0, 2.0 };
-  motion::TwistLimits twist_limits{ 5.0, 5.0 };
-
-  motion::Limits limits{ acceleration_limits, twist_limits };
-  std::vector<turtle::Turtle::Options> options{
-    { "oswin", getTurtleImages()[0], motion::Pose{ { -5.0, 0.0 }, 0.0 }, limits },
-    { "kyle", getTurtleImages()[1], motion::Pose{ { 5.0, 0.0 }, 0.0 }, limits }
-  };
-  world_.init(options);
+  world_ = World(getTurtleImages());
+  world_.init();
 
   update();
 }

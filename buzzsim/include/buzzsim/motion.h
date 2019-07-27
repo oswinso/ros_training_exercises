@@ -21,6 +21,7 @@ struct Position
   double y{};
 
   QPointF toQPointF(int width, int height) const;
+  bool operator==(const Position& other) const;
 };
 
 struct AccelerationLimits
@@ -29,12 +30,14 @@ struct AccelerationLimits
   double angular = std::numeric_limits<double>::max();
 
   Acceleration limit(const Acceleration& acceleration) const;
+  bool operator==(const AccelerationLimits& other) const;
 };
 
 struct Acceleration
 {
   double linear{};
   double angular{};
+  bool operator==(const Acceleration& other) const;
 };
 
 struct TwistLimits
@@ -43,6 +46,7 @@ struct TwistLimits
   double angular = std::numeric_limits<double>::max();
 
   Twist limit(const Twist& twist) const;
+  bool operator==(const TwistLimits& other) const;
 };
 
 struct Twist
@@ -62,6 +66,7 @@ struct Limits
 {
   AccelerationLimits acceleration{};
   TwistLimits twist{};
+  bool operator==(const Limits& other) const;
 };
 
 struct Pose
@@ -74,6 +79,7 @@ struct Pose
   geometry_msgs::Pose toROSMsg() const;
 
   void normalizeHeading();
+  bool operator==(const Pose& other) const;
 };
 
 struct State
@@ -81,8 +87,9 @@ struct State
   Pose pose;
   Twist twist;
 
-  explicit State(Pose pose = {}, Twist twist = {});
+  State(Pose pose = {}, Twist twist = {});
   void apply(const Acceleration& acceleration, const Limits& limits = {});
+  bool operator==(const State& other) const;
 };
 
 std::ostream& operator<<(std::ostream& out, const Position& twist);

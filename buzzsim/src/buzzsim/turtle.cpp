@@ -7,13 +7,17 @@
 #include <QPainter>
 
 #include <buzzsim/turtle.h>
-#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/PoseStamped.h>
+#include <nav_msgs/Odometry.h>
 
 namespace turtle
 {
 Turtle::Turtle(const Options& options)
-  : state_{ options.pose }, limits_{ options.limits }, name_{ options.name }, turtle_image_{ options.turtle_image }
+  : state_{ options.state }
+  , limits_{ options.limits }
+  , setpoint_{ options.state.twist }
+  , name_{ options.name }
+  , turtle_image_{ options.turtle_image }
 {
   ROS_INFO_STREAM("Created turtle " << name_);
   updateRotatedImage();
@@ -78,4 +82,13 @@ motion::Acceleration Turtle::getAcceleration()
   return { d_x / motion::SECS_PER_UPDATE, d_theta / motion::SECS_PER_UPDATE };
 }
 
+std::ostream& operator<<(std::ostream& os, const Turtle::Options& options)
+{
+  os << "Turtle:" << std::endl;
+  os << "\t"
+     << "name: " << options.name << std::endl;
+  os << "\t"
+     << "state: " << options.state << std::endl;
+  return os;
+}
 }  // namespace turtle

@@ -20,7 +20,7 @@ public:
   {
     std::string name;
     QImage turtle_image;
-    motion::Pose pose{};
+    motion::State state{};
     motion::Limits limits{};
   };
 
@@ -50,5 +50,7 @@ private:
   ros::Publisher pose_pub_;
   ros::Timer publish_timer_;
 };
+
+std::ostream& operator<<(std::ostream& os, const Turtle::Options& options);
 }  // namespace turtle
 #endif  // SRC_TURTLE_H

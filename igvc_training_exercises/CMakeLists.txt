@@ -7,6 +7,7 @@ add_compile_options(-W -Wall -Wextra)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
+  tf
   igvc_buzzsim)
 
 ###################################
@@ -15,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 
 catkin_package(CATKIN_DEPENDS
   roscpp
+  tf
   igvc_buzzsim)
 
 include_directories(include)

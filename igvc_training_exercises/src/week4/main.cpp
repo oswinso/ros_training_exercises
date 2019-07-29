@@ -3,6 +3,7 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/Imu.h>
 #include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
 
 struct Position
 {
@@ -34,6 +35,7 @@ ros::Publisher g_odom_pub;
 
 void imuCallback(const sensor_msgs::Imu& msg)
 {
+  static tf::TransformBroadcaster g_broadcaster;
 //  g_state.pose.heading = tf::getYaw(msg.orientation);
   g_state.twist.angular = msg.angular_velocity.z;
 
@@ -55,6 +57,12 @@ void imuCallback(const sensor_msgs::Imu& msg)
   odometry_msg.twist.twist.linear.x = g_state.twist.linear;
   odometry_msg.twist.twist.angular.z = g_state.twist.angular;
   g_odom_pub.publish(odometry_msg);
+
+  tf::Transform transform;
+  transform.setOrigin({g_state.pose.position.x, g_state.pose.position.y, 0.0});
+  transform.setRotation(tf::createQuaternionFromYaw(g_state.pose.heading));
+  tf::StampedTransform stamped_transform{transform, msg.header.stamp, "odom", "oswin"};
+  g_broadcaster.sendTransform(stamped_transform);
 }
 
 int main(int argc, char** argv)
@@ -68,5 +76,6 @@ int main(int argc, char** argv)
   g_odom_pub = nh.advertise<nav_msgs::Odometry>("oswin/odometry", 1);
 
   g_last_time = ros::Time::now();
+
   ros::spin();
 }

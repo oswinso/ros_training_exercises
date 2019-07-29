@@ -24,7 +24,7 @@ class BuzzsimFrame : public QFrame
   ~BuzzsimFrame() override;
 
  protected:
-  void paintEvent(QPaintEvent *event) override;
+  void paintEvent([[maybe_unused]] QPaintEvent *) override;
 
  private slots:
   void onUpdate();

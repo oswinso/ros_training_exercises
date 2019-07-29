@@ -69,7 +69,7 @@ void oswinPoseCallback(const geometry_msgs::PoseStamped& msg)
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "week1");
+  ros::init(argc, argv, "week3");
 
   ros::NodeHandle nh;
   ros::NodeHandle pnh{"~"};

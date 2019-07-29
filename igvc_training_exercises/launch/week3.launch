@@ -1,11 +1,11 @@
 <launch>
     <node pkg="igvc_buzzsim" type="buzzsim" name="buzzsim">
-        <param name="config_path" value="$(find igvc_training_exercises)/config/week1/world.yml" />
+        <param name="config_path" value="$(find igvc_training_exercises)/config/week3/world.yml" />
 <!--        <param name="world_name" value="stationary" />-->
         <param name="world_name" value="moving" />
     </node>
 
-    <node pkg="igvc_training_exercises" type="week1" name="week1">
+    <node pkg="igvc_training_exercises" type="week3" name="week3">
         <param name="kp" value="4.0" />
         <param name="ki" value="1.5" />
         <param name="kd" value="0.0" />

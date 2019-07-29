@@ -10,6 +10,9 @@ limits: &limits
     linear: 2
     angular: 2
 
+publish_pose: &publish_pose
+  pose: true
+
 oswin: &oswin
   state:
     pose:
@@ -18,6 +21,7 @@ oswin: &oswin
         y: 0
     twist: *zero_twist
   limits: *limits
+  publishers: *publish_pose
 
 stationary_kyle: &stationary_kyle
   state:
@@ -27,6 +31,7 @@ stationary_kyle: &stationary_kyle
         y: 0
     twist: *zero_twist
   limits: *limits
+  publishers: *publish_pose
 
 moving_kyle: &moving_kyle
   state:
@@ -38,6 +43,7 @@ moving_kyle: &moving_kyle
       linear: 1
       angular: 0
   limits: *limits
+  publishers: *publish_pose
 
 worlds:
   stationary:

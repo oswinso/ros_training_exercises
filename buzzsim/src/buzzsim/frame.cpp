@@ -48,7 +48,7 @@ void BuzzsimFrame::onUpdate()
 
 BuzzsimFrame::~BuzzsimFrame() = default;
 
-void BuzzsimFrame::paintEvent(QPaintEvent *event)
+void BuzzsimFrame::paintEvent([[maybe_unused]] QPaintEvent *)
 {
   QPainter painter(this);
   world_.paint(&painter);

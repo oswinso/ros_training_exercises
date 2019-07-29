@@ -298,6 +298,18 @@ bool convert<turtle::Turtle::Options>::decode(const Node& node, turtle::Turtle::
     return false;
   }
 
+  rhs.publish_options = {};
+  if (node["publishers"].IsDefined())
+  {
+    rhs.publish_options = node["publishers"].as<turtle::Turtle::PublishOptions>();
+  }
+
+  rhs.sensor_std_devs = {};
+  if (node["sensor_covariances"].IsDefined())
+  {
+    rhs.sensor_std_devs = node["sensor_covariances"].as<turtle::Turtle::SensorStdDevs>();
+  }
+
   rhs.state = {};
   if (node["state"].IsDefined())
   {
@@ -309,6 +321,65 @@ bool convert<turtle::Turtle::Options>::decode(const Node& node, turtle::Turtle::
   {
     rhs.limits = node["limits"].as<motion::Limits>();
   }
+  return true;
+}
+
+bool convert<turtle::Turtle::PublishOptions>::decode(const Node& node, turtle::Turtle::PublishOptions& rhs)
+{
+  if (!node.IsMap())
+  {
+    return false;
+  }
+
+  rhs.pose = false;
+  if (node["pose"].IsDefined())
+  {
+    rhs.pose = node["pose"].as<bool>();
+  }
+
+  rhs.imu = false;
+  if (node["imu"].IsDefined())
+  {
+    rhs.imu = node["imu"].as<bool>();
+  }
+
+  return true;
+}
+
+bool convert<turtle::Turtle::SensorStdDevs>::decode(const Node& node, turtle::Turtle::SensorStdDevs& rhs)
+{
+  if (!node.IsMap())
+  {
+    return false;
+  }
+
+  if (node["accelerometer"].IsDefined())
+  {
+    if (!node["accelerometer"].IsScalar())
+    {
+      return false;
+    }
+    rhs.accelerometer = node["accelerometer"].as<double>();
+  }
+
+  if (node["gyro"].IsDefined())
+  {
+    if (!node["gyro"].IsScalar())
+    {
+      return false;
+    }
+    rhs.gyro = node["gyro"].as<double>();
+  }
+
+  if (node["magnetometer"].IsDefined())
+  {
+    if (!node["magnetometer"].IsScalar())
+    {
+      return false;
+    }
+    rhs.magnetometer = node["magnetometer"].as<double>();
+  }
+
   return true;
 }
 }  // namespace YAML

@@ -4,7 +4,7 @@
 
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "world_setup");
+  ros::init(argc, argv, "week_3_world_setup");
 
   ros::NodeHandle nh;
 

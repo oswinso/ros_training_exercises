@@ -1,0 +1,33 @@
+publish_imu: &publish_imu
+  imu: true
+
+limits: &limits
+  acceleration:
+    linear: 5
+    angular: 5
+  twist:
+    linear: 2
+    angular: 2
+
+sensor_covariances: &sensor_covariances
+  accelerometer: 0.0
+  gyro: 0.0
+  magnetometer: 0.0
+
+oswin: &oswin
+  sensor_covariances: *sensor_covariances
+  state:
+    pose:
+      position:
+        x: -5
+        y: 0
+    twist:
+      linear: 0
+      angular: 0
+  limits: *limits
+  publishers: *publish_imu
+
+worlds:
+  imu_test:
+    turtles:
+      oswin: *oswin

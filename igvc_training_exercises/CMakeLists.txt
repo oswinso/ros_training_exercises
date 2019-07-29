@@ -18,6 +18,6 @@ catkin_package(CATKIN_DEPENDS
   igvc_buzzsim)
 
 include_directories(include)
-add_subdirectory(src/week1)
-
+add_subdirectory(src/week3)
+add_subdirectory(src/week4)
 

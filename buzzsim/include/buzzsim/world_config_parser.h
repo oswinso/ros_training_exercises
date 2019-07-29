@@ -90,6 +90,18 @@ struct convert<turtle::Turtle::Options>
 {
   static bool decode(const Node& node, turtle::Turtle::Options& rhs);
 };
+
+template <>
+struct convert<turtle::Turtle::PublishOptions>
+{
+  static bool decode(const Node& node, turtle::Turtle::PublishOptions& rhs);
+};
+
+template <>
+struct convert<turtle::Turtle::SensorStdDevs>
+{
+  static bool decode(const Node& node, turtle::Turtle::SensorStdDevs& rhs);
+};
 }  // namespace YAML
 
 #endif  // SRC_WORLD_CONFIG_PARSER_H

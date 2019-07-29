@@ -30,8 +30,9 @@ void World::init()
 void World::init(const WorldConfigParser::SpawnOptions& options)
 {
   turtles_.clear();
+  obstacles_ = options.obstacles;
 
-  for (const auto& option : options)
+  for (const auto& option : options.turtles)
   {
     turtles_.emplace_back(std::make_unique<turtle::Turtle>(option));
   }

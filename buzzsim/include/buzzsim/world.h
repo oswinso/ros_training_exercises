@@ -10,6 +10,7 @@ class World
 {
  public:
   using SpawnOptions = WorldConfigParser::SpawnOptions;
+
   World();
   World(std::vector<QImage>&& images);
 
@@ -33,6 +34,7 @@ class World
   WorldConfigParser parser_;
 
   std::vector<std::unique_ptr<turtle::Turtle>> turtles_;
+  std::vector<Obstacle> obstacles_;
 
   ros::NodeHandle nh;
   ros::NodeHandle pnh;

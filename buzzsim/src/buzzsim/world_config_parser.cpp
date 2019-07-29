@@ -1,7 +1,8 @@
 
 #include <buzzsim/world_config_parser.h>
 
-WorldConfigParser::SpawnOptions WorldConfigParser::parseConfig(const std::string& config_path, const std::string& world_name) const
+WorldConfigParser::SpawnOptions WorldConfigParser::parseConfig(const std::string& config_path,
+                                                               const std::string& world_name) const
 {
   try
   {
@@ -21,7 +22,7 @@ WorldConfigParser::SpawnOptions WorldConfigParser::parseConfig(const std::string
     for (const auto& world_node : world_nodes)
     {
       auto name = world_node.first.as<std::string>();
-      ROS_ERROR_STREAM("\n\n\nParsing world \"" << name << "\"...");
+      ROS_INFO_STREAM("\n\n\nParsing world \"" << name << "\"...");
       spawn_options.insert(std::make_pair(name, parseWorld(world_node.second)));
 
       options += name + " ";
@@ -33,7 +34,7 @@ WorldConfigParser::SpawnOptions WorldConfigParser::parseConfig(const std::string
       return getSimpleOptions();
     }
 
-    ROS_ERROR_STREAM("World name: " << world_name);
+    ROS_INFO_STREAM("World name: " << world_name);
 
     return spawn_options.at(world_name);
   }
@@ -48,8 +49,7 @@ WorldConfigParser::SpawnOptions WorldConfigParser::parseConfig(const std::string
   return getSimpleOptions();
 }
 
-WorldConfigParser::SpawnOptions WorldConfigParser::parseWorld(
-    const YAML::Node& world) const
+WorldConfigParser::SpawnOptions WorldConfigParser::parseWorld(const YAML::Node& world) const
 {
   const YAML::Node& turtles = world["turtles"];
   if (!turtles.IsDefined())
@@ -62,16 +62,18 @@ WorldConfigParser::SpawnOptions WorldConfigParser::parseWorld(
   int image_num = 0;
   for (const auto& turtle : turtles)
   {
-    ROS_ERROR_STREAM("\nParsing turtle " << turtle.first.as<std::string>() << " (" << image_num << ")...");
+    ROS_INFO_STREAM("\nParsing turtle " << turtle.first.as<std::string>() << " (" << image_num << ")...");
     auto option = turtle.second.as<turtle::Turtle::Options>();
-    ROS_ERROR_STREAM("Options: " << option);
     option.name = turtle.first.as<std::string>();
     option.turtle_image = images_[image_num];
 
-    spawn_options.emplace_back(option);
+    spawn_options.turtles.emplace_back(option);
 
-    image_num = (image_num + 1) % images_.size();
+    image_num = (image_num + 1) % static_cast<int>(images_.size());
   }
+  spawn_options.obstacles = world["obstacles"].as<std::vector<Obstacle>>();
+
+  ROS_INFO_STREAM("Options: " << spawn_options);
 
   return spawn_options;
 }
@@ -81,7 +83,7 @@ WorldConfigParser::SpawnOptions WorldConfigParser::getSimpleOptions() const
   SpawnOptions spawn_options;
   motion::State state{};
   turtle::Turtle::Options simple_option{ "oswin", images_[0], state, getSimpleLimits() };
-  spawn_options.emplace_back(simple_option);
+  spawn_options.turtles.emplace_back(simple_option);
 
   return spawn_options;
 }
@@ -98,6 +100,22 @@ motion::Limits WorldConfigParser::getSimpleLimits() const
 void WorldConfigParser::setImages(std::vector<QImage>&& images)
 {
   images_ = std::move(images);
+}
+
+std::ostream& operator<<(std::ostream& os, const WorldConfigParser::SpawnOptions& options)
+{
+  for (const auto& turtle : options.turtles)
+  {
+    os << turtle << std::endl;
+  }
+  os << "Obstacles:" << std::endl;
+
+  for (const auto& obstacle : options.obstacles)
+  {
+    os << "\t" << obstacle << std::endl;
+  }
+
+  return os;
 }
 
 namespace YAML
@@ -304,10 +322,22 @@ bool convert<turtle::Turtle::Options>::decode(const Node& node, turtle::Turtle::
     rhs.publish_options = node["publishers"].as<turtle::Turtle::PublishOptions>();
   }
 
-  rhs.sensor_std_devs = {};
-  if (node["sensor_covariances"].IsDefined())
+  rhs.imu_std_devs_ = {};
+  if (node["imu_covariances"].IsDefined())
   {
-    rhs.sensor_std_devs = node["sensor_covariances"].as<turtle::Turtle::SensorStdDevs>();
+    rhs.imu_std_devs_ = node["sensor_covariances"].as<turtle::Turtle::ImuStdDevs>();
+  }
+
+  rhs.lidar_options_ = {};
+  if (node["lidar"].IsDefined())
+  {
+    rhs.lidar_options_ = node["lidar"].as<turtle::Turtle::LidarOptions>();
+  }
+
+  rhs.lidar_options_ = {};
+  if (node["obstacles"].IsDefined())
+  {
+    rhs.lidar_options_ = node["lidar"].as<turtle::Turtle::LidarOptions>();
   }
 
   rhs.state = {};
@@ -343,10 +373,16 @@ bool convert<turtle::Turtle::PublishOptions>::decode(const Node& node, turtle::T
     rhs.imu = node["imu"].as<bool>();
   }
 
+  rhs.lidar = false;
+  if (node["lidar"].IsDefined())
+  {
+    rhs.lidar = node["lidar"].as<bool>();
+  }
+
   return true;
 }
 
-bool convert<turtle::Turtle::SensorStdDevs>::decode(const Node& node, turtle::Turtle::SensorStdDevs& rhs)
+bool convert<turtle::Turtle::ImuStdDevs>::decode(const Node& node, turtle::Turtle::ImuStdDevs& rhs)
 {
   if (!node.IsMap())
   {
@@ -379,6 +415,71 @@ bool convert<turtle::Turtle::SensorStdDevs>::decode(const Node& node, turtle::Tu
     }
     rhs.magnetometer = node["magnetometer"].as<double>();
   }
+
+  return true;
+}
+
+bool convert<turtle::Turtle::LidarOptions>::decode(const Node& node, turtle::Turtle::LidarOptions& rhs)
+{
+  if (!node.IsMap())
+  {
+    return false;
+  }
+
+  if (node["angle_width"].IsDefined())
+  {
+    if (!node["angle_width"].IsScalar())
+    {
+      return false;
+    }
+    rhs.angle_width = node["angle_width"].as<double>();
+  }
+
+  if (node["range"].IsDefined())
+  {
+    if (!node["range"].IsScalar())
+    {
+      return false;
+    }
+    rhs.range = node["range"].as<double>();
+  }
+
+  if (node["angular_resolution"].IsDefined())
+  {
+    if (!node["angular_resolution"].IsScalar())
+    {
+      return false;
+    }
+    rhs.angular_resolution = node["angular_resolution"].as<double>();
+  }
+
+  return true;
+}
+
+bool convert<Obstacle>::decode(const Node& node, Obstacle& rhs)
+{
+  if (!node.IsSequence())
+  {
+    return false;
+  }
+
+  for (const auto& point_node : node)
+  {
+    if (!point_node.IsSequence())
+    {
+      return false;
+    }
+    motion::Position point{};
+
+    if (point_node.size() != 2 || !point_node[0].IsScalar() || !point_node[1].IsScalar())
+    {
+      return false;
+    }
+    point.x = point_node[0].as<double>();
+    point.y = point_node[1].as<double>();
+
+    rhs.points.emplace_back(point);
+  };
 
   return true;
 }

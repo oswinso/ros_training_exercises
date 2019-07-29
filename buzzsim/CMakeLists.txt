@@ -8,6 +8,7 @@ add_compile_options(-W -Wall -Wextra)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   roslib
+  pcl_ros
   geometry_msgs
   std_msgs
   turtlesim
@@ -31,6 +32,7 @@ set(QT_LIBRARIES Qt5::Widgets)
 
 catkin_package(CATKIN_DEPENDS
   roslib
+  pcl_ros
   geometry_msgs
   message_runtime
   std_msgs
@@ -47,6 +49,8 @@ set(buzzsim_SRCS
   src/buzzsim/motion.cpp
   src/buzzsim/world.cpp
   src/buzzsim/world_config_parser.cpp
+  src/buzzsim/obstacle.cpp
+  src/buzzsim/sensors/lidar.cpp
   )
 set(buzzsim_HDRS
   include/buzzsim/app.h

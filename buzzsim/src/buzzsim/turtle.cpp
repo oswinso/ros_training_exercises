@@ -8,21 +8,30 @@
 #include <tf/transform_datatypes.h>
 
 #include <buzzsim/turtle.h>
+#include <pcl/point_cloud.h>
+#include <pcl_ros/point_cloud.h>
+#include <pcl_ros/transforms.h>
 
 namespace turtle
 {
-Turtle::Turtle(const Options& options)
+Turtle::Turtle(const Options& options, const std::vector<Obstacle>* obstacles)
   : state_{ options.state }
   , limits_{ options.limits }
   , setpoint_{ options.state.twist }
   , publish_options_{ options.publish_options }
   , name_{ options.name }
+  , obstacles_{ obstacles }
   , turtle_image_{ options.turtle_image }
-  , imu_noise_{ options.sensor_std_devs }
+  , imu_noise_{ options.imu_std_devs_ }
+  , lidar_{ options.lidar_options_ }
 {
   ROS_INFO_STREAM("Created turtle " << name_);
   updateRotatedImage();
+  setupPubSub();
+}
 
+void Turtle::setupPubSub()
+{
   velocity_sub_ = nh_.subscribe(name_ + "/velocity", 1, &Turtle::velocityCallback, this);
 
   if (publish_options_.imu)
@@ -33,6 +42,11 @@ Turtle::Turtle(const Options& options)
   if (publish_options_.pose)
   {
     pose_pub_ = nh_.advertise<geometry_msgs::PoseStamped>(name_ + "/ground_truth", 1);
+  }
+
+  if (publish_options_.lidar)
+  {
+    lidar_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(name_ + "/pointcloud", 1);
   }
 
   if (publish_options_.hasPublisher())
@@ -89,6 +103,11 @@ void Turtle::publishCallback([[maybe_unused]] const ros::TimerEvent&)
   {
     publishIMU();
   }
+
+  if (publish_options_.lidar)
+  {
+    publishLidar();
+  }
 }
 
 void Turtle::publishPose()
@@ -109,11 +128,19 @@ void Turtle::publishIMU()
   msg.linear_acceleration.x = acceleration_.linear + imu_noise_.accelerometerNoise();
   msg.orientation = tf::createQuaternionMsgFromYaw(state_.pose.orientation + imu_noise_.magnetometerNoise());
 
-  msg.linear_acceleration_covariance[0] = imu_noise_.sensor_std_devs_.accelerometer;
-  msg.angular_velocity_covariance[0] = imu_noise_.sensor_std_devs_.gyro;
-  msg.orientation_covariance[0] = imu_noise_.sensor_std_devs_.magnetometer;
+  msg.linear_acceleration_covariance[0] = imu_noise_.imu_std_devs_.accelerometer;
+  msg.angular_velocity_covariance[0] = imu_noise_.imu_std_devs_.gyro;
+  msg.orientation_covariance[0] = imu_noise_.imu_std_devs_.magnetometer;
 
   imu_pub_.publish(msg);
+}
+
+void Turtle::publishLidar()
+{
+  pcl::PointCloud<pcl::PointXY> pointcloud = lidar_.getLidarScan(state_.pose, obstacles_);
+  pointcloud.header.stamp = ros::Time::now();
+  pointcloud.header.frame_id = "oswin";
+  lidar_pub_.publish(pointcloud);
 }
 
 motion::Acceleration Turtle::getAcceleration()
@@ -127,11 +154,11 @@ motion::Acceleration Turtle::getAcceleration()
 
 bool Turtle::PublishOptions::hasPublisher() const
 {
-  return imu || pose;
+  return imu || pose || lidar;
 }
 
-Turtle::IMUNoise::IMUNoise(const SensorStdDevs& sensor_std_devs)
-  : sensor_std_devs_{ sensor_std_devs }
+Turtle::IMUNoise::IMUNoise(const ImuStdDevs& sensor_std_devs)
+  : imu_std_devs_{sensor_std_devs }
   , acccelerometer_noise_{ 0, sensor_std_devs.accelerometer }
   , gyro_noise_{ 0, sensor_std_devs.gyro }
   , magnetometer_noise_{ sensor_std_devs.magnetometer }
@@ -162,15 +189,24 @@ std::ostream& operator<<(std::ostream& os, const Turtle::Options& options)
      << "state: " << options.state << std::endl;
   os << "\t"
      << "publishers: " << (options.publish_options.imu ? "imu " : "") << (options.publish_options.pose ? "pose " : "")
+     << (options.publish_options.lidar ? "lidar " : "")
      << std::endl;
   os << "\t"
      << "std_devs: " << std::endl;
   os << "\t\t"
-     << "accelerometer: " << options.sensor_std_devs.accelerometer << std::endl;
+     << "accelerometer: " << options.imu_std_devs_.accelerometer << std::endl;
   os << "\t\t"
-     << "gyro: " << options.sensor_std_devs.gyro << std::endl;
+     << "gyro: " << options.imu_std_devs_.gyro << std::endl;
   os << "\t\t"
-     << "magnetometer: " << options.sensor_std_devs.magnetometer << std::endl;
+     << "magnetometer: " << options.imu_std_devs_.magnetometer << std::endl;
+  os << "\t"
+     << "lidar options:" << std::endl;
+  os << "\t\t"
+     << "angle_width: " << options.lidar_options_.angle_width << std::endl;
+  os << "\t\t"
+     << "range: " << options.lidar_options_.range << std::endl;
+  os << "\t\t"
+     << "angular_resolution: " << options.lidar_options_.angular_resolution << std::endl;
   return os;
 }
 }  // namespace turtle

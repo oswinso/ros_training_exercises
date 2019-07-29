@@ -9,13 +9,13 @@ limits: &limits
     linear: 2
     angular: 2
 
-sensor_covariances: &sensor_covariances
+imu_covariances: &imu_covariances
   accelerometer: 0.0
   gyro: 0.0
   magnetometer: 0.0
 
 oswin: &oswin
-  sensor_covariances: *sensor_covariances
+  imu_covariances: *imu_covariances
   state:
     pose:
       position:

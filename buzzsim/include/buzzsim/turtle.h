@@ -11,6 +11,8 @@
 #include <ros/subscriber.h>
 
 #include <buzzsim/motion.h>
+#include <buzzsim/sensors/lidar.h>
+#include <buzzsim/obstacle.h>
 
 namespace turtle
 {
@@ -21,11 +23,12 @@ public:
   {
     bool imu;
     bool pose;
+    bool lidar;
 
     [[nodiscard]] bool hasPublisher() const;
   };
 
-  struct SensorStdDevs
+  struct ImuStdDevs
   {
     double accelerometer{};
     double gyro{};
@@ -38,25 +41,26 @@ public:
     QImage turtle_image;
     motion::State state{};
     motion::Limits limits{};
-    SensorStdDevs sensor_std_devs{};
+    ImuStdDevs imu_std_devs_{};
+    LidarOptions lidar_options_{};
     PublishOptions publish_options{};
   };
 
   struct IMUNoise
   {
     std::mt19937 gen_{ std::random_device{}() };
-    SensorStdDevs sensor_std_devs_{};
+    ImuStdDevs imu_std_devs_{};
     std::normal_distribution<> acccelerometer_noise_{};
     std::normal_distribution<> gyro_noise_{};
     std::normal_distribution<> magnetometer_noise_{};
 
-    IMUNoise(const SensorStdDevs& sensor_std_devs);
+    IMUNoise(const ImuStdDevs& sensor_std_devs);
     double accelerometerNoise();
     double gyroNoise();
     double magnetometerNoise();
   };
 
-  Turtle(const Options& options);
+  Turtle(const Options& options, const std::vector<Obstacle>* obstacles);
   void paint(QPainter& painter);
   void updatePose();
 
@@ -68,18 +72,22 @@ public:
   PublishOptions publish_options_{};
 
 private:
+  void setupPubSub();
   void updateRotatedImage();
   void velocityCallback(const geometry_msgs::TwistConstPtr& twist);
   void publishCallback([[maybe_unused]] const ros::TimerEvent&);
 
   void publishPose();
   void publishIMU();
+  void publishLidar();
 
   motion::Acceleration getAcceleration();
 
   std::string name_;
 
   std::mutex setpoint_mutex_;
+
+  const std::vector<Obstacle>* obstacles_;
 
   QImage turtle_image_;
   QImage turtle_rotated_image_;
@@ -89,10 +97,12 @@ private:
 
   ros::Publisher imu_pub_;
   ros::Publisher pose_pub_;
+  ros::Publisher lidar_pub_;
 
   ros::Timer publish_timer_;
 
   IMUNoise imu_noise_;
+  Lidar lidar_;
 };
 
 std::ostream& operator<<(std::ostream& os, const Turtle::Options& options);

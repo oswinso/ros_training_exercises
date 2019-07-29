@@ -8,12 +8,17 @@
 #include <yaml-cpp/yaml.h>
 
 #include <buzzsim/motion.h>
+#include <buzzsim/obstacle.h>
 #include <buzzsim/turtle.h>
 
 class WorldConfigParser
 {
 public:
-  using SpawnOptions = std::vector<turtle::Turtle::Options>;
+  struct SpawnOptions
+  {
+    std::vector<Obstacle> obstacles;
+    std::vector<turtle::Turtle::Options> turtles;
+  };
 
   void setImages(std::vector<QImage>&& images);
 
@@ -40,6 +45,8 @@ public:
 private:
   std::vector<QImage> images_;
 };
+
+std::ostream& operator<<(std::ostream& os, const WorldConfigParser::SpawnOptions& options);
 
 namespace YAML
 {
@@ -98,9 +105,21 @@ struct convert<turtle::Turtle::PublishOptions>
 };
 
 template <>
-struct convert<turtle::Turtle::SensorStdDevs>
+struct convert<turtle::Turtle::ImuStdDevs>
 {
-  static bool decode(const Node& node, turtle::Turtle::SensorStdDevs& rhs);
+  static bool decode(const Node& node, turtle::Turtle::ImuStdDevs& rhs);
+};
+
+template <>
+struct convert<turtle::Turtle::LidarOptions>
+{
+  static bool decode(const Node& node, turtle::Turtle::LidarOptions& rhs);
+};
+
+template <>
+struct convert<Obstacle>
+{
+  static bool decode(const Node& node, Obstacle& rhs);
 };
 }  // namespace YAML
 

@@ -19,6 +19,7 @@
 
     <depend>roscpp</depend>
     <depend>roslib</depend>
+    <depend>pcl_ros</depend>
     <depend>geometry_msgs</depend>
     <depend>std_msgs</depend>
     <depend>turtlesim</depend>

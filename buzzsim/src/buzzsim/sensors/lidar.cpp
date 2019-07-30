@@ -43,7 +43,7 @@ pcl::PointCloud<pcl::PointXYZ> Lidar::calculateLidarHits(const motion::Pose& pos
       double y = CGAL::to_double(closest_intersection.y() - pose_point.y());
       double rotated_x = cos(pose.orientation) * x + sin(pose.orientation) * y;
       double rotated_y = -sin(pose.orientation) * x + cos(pose.orientation) * y;
-      pcl::PointXYZ pcl_point{ static_cast<float>(x), static_cast<float>(y), 0.0 };
+      pcl::PointXYZ pcl_point{ static_cast<float>(rotated_x), static_cast<float>(rotated_y), 0.0 };
       scan.points.emplace_back(pcl_point);
     }
   }

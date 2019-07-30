@@ -1,4 +1,4 @@
-
+#include <buzzsim/obstacle_parser.h>
 #include <buzzsim/world_config_parser.h>
 
 WorldConfigParser::SpawnOptions WorldConfigParser::parseConfig(const std::string& config_path,
@@ -474,34 +474,6 @@ bool convert<turtle::LidarPainter::Options>::decode(const Node& node, turtle::Li
     }
     rhs.visualization_ratio = node["visualization_ratio"].as<int>();
   }
-
-  return true;
-}
-
-bool convert<Obstacle>::decode(const Node& node, Obstacle& rhs)
-{
-  if (!node.IsSequence())
-  {
-    return false;
-  }
-
-  for (const auto& point_node : node)
-  {
-    if (!point_node.IsSequence())
-    {
-      return false;
-    }
-    motion::Position point{};
-
-    if (point_node.size() != 2 || !point_node[0].IsScalar() || !point_node[1].IsScalar())
-    {
-      return false;
-    }
-    point.x = point_node[0].as<double>();
-    point.y = point_node[1].as<double>();
-
-    rhs.points.emplace_back(point);
-  };
 
   return true;
 }

@@ -53,6 +53,7 @@ set(buzzsim_SRCS
   src/buzzsim/world.cpp
   src/buzzsim/world_config_parser.cpp
   src/buzzsim/obstacle.cpp
+  src/buzzsim/obstacle_parser.cpp
   src/buzzsim/sensors/lidar.cpp
   src/buzzsim/sensors/print_utils.cpp
   src/buzzsim/sensors/lidar_painter.cpp

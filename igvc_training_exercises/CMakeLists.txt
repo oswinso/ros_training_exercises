@@ -24,4 +24,4 @@ include_directories(include)
 add_subdirectory(src/week3)
 add_subdirectory(src/week4)
 add_subdirectory(src/week5)
-
+add_subdirectory(src/week6)

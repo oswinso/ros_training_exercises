@@ -28,8 +28,6 @@ Turtle::Turtle(const Options& options, const std::vector<Obstacle>* obstacles)
   ROS_INFO_STREAM("Created turtle " << name_);
   updateRotatedImage();
   setupPubSub();
-
-  lidar_.test2(state_.pose.position, *obstacles_);
 }
 
 void Turtle::setupPubSub()
@@ -48,7 +46,7 @@ void Turtle::setupPubSub()
 
   if (publish_options_.lidar)
   {
-    lidar_pub_ = nh_.advertise<sensor_msgs::PointCloud2>(name_ + "/pointcloud", 1);
+    lidar_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>(name_ + "/pointcloud", 1);
   }
 
   if (publish_options_.hasPublisher())
@@ -99,6 +97,7 @@ void Turtle::publishCallback([[maybe_unused]] const ros::TimerEvent&)
   if (publish_options_.pose)
   {
     publishPose();
+    publishTransform();
   }
 
   if (publish_options_.imu)
@@ -121,6 +120,16 @@ void Turtle::publishPose()
   pose_pub_.publish(msg);
 }
 
+void Turtle::publishTransform()
+{
+  tf::Transform transform;
+  transform.setOrigin({state_.pose.position.x, state_.pose.position.y, 0.0});
+  transform.setRotation(tf::createQuaternionFromYaw(state_.pose.orientation));
+
+  tf::StampedTransform stamped_transform{transform, ros::Time::now(), "odom", "oswin"};
+  broadcaster_.sendTransform(stamped_transform);
+}
+
 void Turtle::publishIMU()
 {
   sensor_msgs::Imu msg{};
@@ -139,7 +148,7 @@ void Turtle::publishIMU()
 
 void Turtle::publishLidar()
 {
-  pcl::PointCloud<pcl::PointXY> pointcloud = lidar_.getLidarScan(state_.pose, obstacles_);
+  pcl::PointCloud<pcl::PointXYZ> pointcloud = lidar_.simulate(state_.pose, *obstacles_);
   pointcloud.header.stamp = pcl_conversions::toPCL(ros::Time::now());
   pointcloud.header.frame_id = "oswin";
   lidar_pub_.publish(pointcloud);

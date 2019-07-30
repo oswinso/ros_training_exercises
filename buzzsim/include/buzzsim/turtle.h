@@ -9,6 +9,7 @@
 #include <geometry_msgs/Twist.h>
 #include <ros/node_handle.h>
 #include <ros/subscriber.h>
+#include <tf/transform_broadcaster.h>
 
 #include <buzzsim/motion.h>
 #include <buzzsim/sensors/lidar.h>
@@ -78,6 +79,7 @@ private:
   void publishCallback([[maybe_unused]] const ros::TimerEvent&);
 
   void publishPose();
+  void publishTransform();
   void publishIMU();
   void publishLidar();
 
@@ -101,6 +103,7 @@ private:
 
   ros::Timer publish_timer_;
 
+  tf::TransformBroadcaster broadcaster_;
   IMUNoise imu_noise_;
   Lidar lidar_;
 };

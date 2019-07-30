@@ -111,9 +111,9 @@ struct convert<turtle::Turtle::ImuStdDevs>
 };
 
 template <>
-struct convert<turtle::Turtle::LidarOptions>
+struct convert<turtle::Lidar::Options>
 {
-  static bool decode(const Node& node, turtle::Turtle::LidarOptions& rhs);
+  static bool decode(const Node& node, turtle::Lidar::Options& rhs);
 };
 
 template <>

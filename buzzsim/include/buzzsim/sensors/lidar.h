@@ -7,21 +7,26 @@
 
 #include <buzzsim/motion.h>
 #include <buzzsim/obstacle.h>
+#include <buzzsim/sensors/cgal_types.h>
 
 namespace turtle
 {
 class Lidar
 {
 public:
-  struct LidarOptions
+  struct Options
   {
     double angle_width;
     double range;
     double angular_resolution;
   };
 
-  Lidar(const LidarOptions& options);
-  pcl::PointCloud<pcl::PointXYZ> getLidarScan(const motion::Pose& pose, const std::vector<Obstacle>* obstacles);
+  Lidar(const Options& options);
+  pcl::PointCloud<pcl::PointXY> getLidarScan(const motion::Pose& pose, const std::vector<Obstacle>* obstacles);
+  void test();
+  void test2(const motion::Position& position, const std::vector<Obstacle>& obstacles);
+  Polygon_2 computeVisibilityPolygon(const motion::Position& position, const Polygon_with_holes_2& polygon) const;
+  Polygon_with_holes_2 getPolygonWithHoles(const motion::Position& position, const std::vector<Obstacle>& obstacles) const;
 
 private:
   struct LidarHit
@@ -32,7 +37,7 @@ private:
 
   std::vector<LidarHit> getLidarScan(const motion::Pose& pose, const Obstacle& obstacle);
 
-  LidarOptions options_;
+  Options options_;
 };
 }  // namespace turtle
 

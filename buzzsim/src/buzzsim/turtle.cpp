@@ -28,6 +28,8 @@ Turtle::Turtle(const Options& options, const std::vector<Obstacle>* obstacles)
   ROS_INFO_STREAM("Created turtle " << name_);
   updateRotatedImage();
   setupPubSub();
+
+  lidar_.test2(state_.pose.position, *obstacles_);
 }
 
 void Turtle::setupPubSub()
@@ -138,7 +140,7 @@ void Turtle::publishIMU()
 void Turtle::publishLidar()
 {
   pcl::PointCloud<pcl::PointXY> pointcloud = lidar_.getLidarScan(state_.pose, obstacles_);
-  pointcloud.header.stamp = ros::Time::now();
+  pointcloud.header.stamp = pcl_conversions::toPCL(ros::Time::now());
   pointcloud.header.frame_id = "oswin";
   lidar_pub_.publish(pointcloud);
 }

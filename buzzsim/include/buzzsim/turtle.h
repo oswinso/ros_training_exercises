@@ -42,7 +42,7 @@ public:
     motion::State state{};
     motion::Limits limits{};
     ImuStdDevs imu_std_devs_{};
-    LidarOptions lidar_options_{};
+    Lidar::Options lidar_options_{};
     PublishOptions publish_options{};
   };
 

@@ -325,19 +325,13 @@ bool convert<turtle::Turtle::Options>::decode(const Node& node, turtle::Turtle::
   rhs.imu_std_devs_ = {};
   if (node["imu_covariances"].IsDefined())
   {
-    rhs.imu_std_devs_ = node["sensor_covariances"].as<turtle::Turtle::ImuStdDevs>();
+    rhs.imu_std_devs_ = node["imu_covariances"].as<turtle::Turtle::ImuStdDevs>();
   }
 
   rhs.lidar_options_ = {};
   if (node["lidar"].IsDefined())
   {
-    rhs.lidar_options_ = node["lidar"].as<turtle::Turtle::LidarOptions>();
-  }
-
-  rhs.lidar_options_ = {};
-  if (node["obstacles"].IsDefined())
-  {
-    rhs.lidar_options_ = node["lidar"].as<turtle::Turtle::LidarOptions>();
+    rhs.lidar_options_ = node["lidar"].as<turtle::Lidar::Options>();
   }
 
   rhs.state = {};
@@ -419,7 +413,7 @@ bool convert<turtle::Turtle::ImuStdDevs>::decode(const Node& node, turtle::Turtl
   return true;
 }
 
-bool convert<turtle::Turtle::LidarOptions>::decode(const Node& node, turtle::Turtle::LidarOptions& rhs)
+bool convert<turtle::Lidar::Options>::decode(const Node& node, turtle::Lidar::Options& rhs)
 {
   if (!node.IsMap())
   {

@@ -14,6 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   turtlesim
   std_srvs)
 
+find_package(CGAL REQUIRED COMPONENTS Core)
+set(CGAL_LIBRARIES CGAL::CGAL CGAL::CGAL_Core)
+
 find_package(Yaml-cpp REQUIRED)
 
 ###########################
@@ -51,11 +54,11 @@ set(buzzsim_SRCS
   src/buzzsim/world_config_parser.cpp
   src/buzzsim/obstacle.cpp
   src/buzzsim/sensors/lidar.cpp
+  src/buzzsim/sensors/print_utils.cpp
   )
 set(buzzsim_HDRS
   include/buzzsim/app.h
   include/buzzsim/frame.h
-  include/buzzsim/turtle.h
   )
 
 qt5_wrap_cpp(buzzsim_MOCS ${buzzsim_HDRS})
@@ -64,5 +67,5 @@ link_directories(${catkin_LIBRARY_DIRS})
 
 add_executable(buzzsim ${buzzsim_SRCS} ${buzzsim_MOCS})
 target_include_directories(buzzsim PRIVATE include ${catkin_INCLUDE_DIRS} ${YAML_CPP_INCLUDE_DIRS})
-target_link_libraries(buzzsim ${QT_LIBRARIES} ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES})
+target_link_libraries(buzzsim ${QT_LIBRARIES} ${catkin_LIBRARIES} ${YAML_CPP_LIBRARIES} ${CGAL_LIBRARIES})
 add_dependencies(buzzsim ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

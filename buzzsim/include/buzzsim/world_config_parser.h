@@ -117,6 +117,12 @@ struct convert<turtle::Lidar::Options>
 };
 
 template <>
+struct convert<turtle::LidarPainter::Options>
+{
+  static bool decode(const Node& node, turtle::LidarPainter::Options& rhs);
+};
+
+template <>
 struct convert<Obstacle>
 {
   static bool decode(const Node& node, Obstacle& rhs);

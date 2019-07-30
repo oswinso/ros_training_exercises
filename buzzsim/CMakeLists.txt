@@ -55,6 +55,7 @@ set(buzzsim_SRCS
   src/buzzsim/obstacle.cpp
   src/buzzsim/sensors/lidar.cpp
   src/buzzsim/sensors/print_utils.cpp
+  src/buzzsim/sensors/lidar_painter.cpp
   )
 set(buzzsim_HDRS
   include/buzzsim/app.h

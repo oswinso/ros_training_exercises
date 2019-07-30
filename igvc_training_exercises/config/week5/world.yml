@@ -21,6 +21,8 @@ obstacles: &obstacles
 
 oswin: &oswin
   lidar: *lidar_options
+  lidar_painter:
+    visualization_ratio: 5
   state:
     pose:
       position:

@@ -334,6 +334,12 @@ bool convert<turtle::Turtle::Options>::decode(const Node& node, turtle::Turtle::
     rhs.lidar_options_ = node["lidar"].as<turtle::Lidar::Options>();
   }
 
+  rhs.lidar_painter_options_ = {};
+  if (node["lidar_painter"].IsDefined())
+  {
+    rhs.lidar_painter_options_ = node["lidar_painter"].as<turtle::LidarPainter::Options>();
+  }
+
   rhs.state = {};
   if (node["state"].IsDefined())
   {
@@ -445,6 +451,25 @@ bool convert<turtle::Lidar::Options>::decode(const Node& node, turtle::Lidar::Op
       return false;
     }
     rhs.angular_resolution = node["angular_resolution"].as<double>();
+  }
+
+  return true;
+}
+
+bool convert<turtle::LidarPainter::Options>::decode(const Node& node, turtle::LidarPainter::Options& rhs)
+{
+  if (!node.IsMap())
+  {
+    return false;
+  }
+
+  if (node["visualization_ratio"].IsDefined())
+  {
+    if (!node["visualization_ratio"].IsScalar())
+    {
+      return false;
+    }
+    rhs.visualization_ratio = node["visualization_ratio"].as<int>();
   }
 
   return true;

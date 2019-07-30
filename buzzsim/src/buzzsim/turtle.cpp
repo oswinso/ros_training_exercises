@@ -24,6 +24,7 @@ Turtle::Turtle(const Options& options, const std::vector<Obstacle>* obstacles)
   , turtle_image_{ options.turtle_image }
   , imu_noise_{ options.imu_std_devs_ }
   , lidar_{ options.lidar_options_ }
+  , lidar_painter_{ options.lidar_painter_options_, options.lidar_options_ }
 {
   ROS_INFO_STREAM("Created turtle " << name_);
   updateRotatedImage();
@@ -59,10 +60,22 @@ void Turtle::paint(QPainter& painter)
 {
   auto width = painter.window().width();
   auto height = painter.window().height();
+
+  if (publish_options_.lidar)
+  {
+    drawLidar(painter, width, height);
+  }
+
   QPointF p = state_.pose.position.toQPointF(width, height);
   p.rx() -= 0.5 * turtle_rotated_image_.width();
   p.ry() -= 0.5 * turtle_rotated_image_.height();
   painter.drawImage(p, turtle_rotated_image_);
+}
+
+void Turtle::drawLidar(QPainter& painter, int width, int height)
+{
+  std::unique_lock<std::mutex> lock(pointcloud_mutex_);
+  lidar_painter_.paint(painter, last_pointcloud_, state_.pose, width, height);
 }
 
 void Turtle::updateRotatedImage()
@@ -123,10 +136,10 @@ void Turtle::publishPose()
 void Turtle::publishTransform()
 {
   tf::Transform transform;
-  transform.setOrigin({state_.pose.position.x, state_.pose.position.y, 0.0});
+  transform.setOrigin({ state_.pose.position.x, state_.pose.position.y, 0.0 });
   transform.setRotation(tf::createQuaternionFromYaw(state_.pose.orientation));
 
-  tf::StampedTransform stamped_transform{transform, ros::Time::now(), "odom", "oswin"};
+  tf::StampedTransform stamped_transform{ transform, ros::Time::now(), "odom", "oswin" };
   broadcaster_.sendTransform(stamped_transform);
 }
 
@@ -152,6 +165,9 @@ void Turtle::publishLidar()
   pointcloud.header.stamp = pcl_conversions::toPCL(ros::Time::now());
   pointcloud.header.frame_id = "oswin";
   lidar_pub_.publish(pointcloud);
+
+  std::unique_lock<std::mutex> lock(pointcloud_mutex_);
+  last_pointcloud_ = std::move(pointcloud);
 }
 
 motion::Acceleration Turtle::getAcceleration()
@@ -169,7 +185,7 @@ bool Turtle::PublishOptions::hasPublisher() const
 }
 
 Turtle::IMUNoise::IMUNoise(const ImuStdDevs& sensor_std_devs)
-  : imu_std_devs_{sensor_std_devs }
+  : imu_std_devs_{ sensor_std_devs }
   , acccelerometer_noise_{ 0, sensor_std_devs.accelerometer }
   , gyro_noise_{ 0, sensor_std_devs.gyro }
   , magnetometer_noise_{ sensor_std_devs.magnetometer }
@@ -200,8 +216,7 @@ std::ostream& operator<<(std::ostream& os, const Turtle::Options& options)
      << "state: " << options.state << std::endl;
   os << "\t"
      << "publishers: " << (options.publish_options.imu ? "imu " : "") << (options.publish_options.pose ? "pose " : "")
-     << (options.publish_options.lidar ? "lidar " : "")
-     << std::endl;
+     << (options.publish_options.lidar ? "lidar " : "") << std::endl;
   os << "\t"
      << "std_devs: " << std::endl;
   os << "\t\t"
@@ -218,6 +233,10 @@ std::ostream& operator<<(std::ostream& os, const Turtle::Options& options)
      << "range: " << options.lidar_options_.range << std::endl;
   os << "\t\t"
      << "angular_resolution: " << options.lidar_options_.angular_resolution << std::endl;
+  os << "\t"
+     << "lidar painter options:" << std::endl;
+  os << "\t\t"
+     << "visualization_ratio: " << options.lidar_painter_options_.visualization_ratio << std::endl;
   return os;
 }
 }  // namespace turtle

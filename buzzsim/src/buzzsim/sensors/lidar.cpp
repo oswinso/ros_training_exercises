@@ -22,6 +22,7 @@ pcl::PointCloud<pcl::PointXYZ> Lidar::calculateLidarHits(const motion::Pose& pos
   double end_angle = pose.orientation + options_.angle_width / 2;
 
   pcl::PointCloud<pcl::PointXYZ> scan;
+  scan.points.reserve(std::round((end_angle - start_angle) / options_.angular_resolution) + 2);
   Point_2 pose_point{ pose.position.x, pose.position.y };
 
   for (double angle = start_angle; angle <= end_angle; angle += options_.angular_resolution)

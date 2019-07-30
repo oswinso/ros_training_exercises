@@ -5,6 +5,7 @@
 #include <random>
 
 #include <QImage>
+#include <QPainter>
 
 #include <geometry_msgs/Twist.h>
 #include <ros/node_handle.h>
@@ -13,6 +14,7 @@
 
 #include <buzzsim/motion.h>
 #include <buzzsim/sensors/lidar.h>
+#include <buzzsim/sensors/lidar_painter.h>
 #include <buzzsim/obstacle.h>
 
 namespace turtle
@@ -44,6 +46,7 @@ public:
     motion::Limits limits{};
     ImuStdDevs imu_std_devs_{};
     Lidar::Options lidar_options_{};
+    LidarPainter::Options lidar_painter_options_{};
     PublishOptions publish_options{};
   };
 
@@ -83,6 +86,8 @@ private:
   void publishIMU();
   void publishLidar();
 
+  void drawLidar(QPainter& painter, int width, int height);
+
   motion::Acceleration getAcceleration();
 
   std::string name_;
@@ -106,6 +111,9 @@ private:
   tf::TransformBroadcaster broadcaster_;
   IMUNoise imu_noise_;
   Lidar lidar_;
+  LidarPainter lidar_painter_;
+  pcl::PointCloud<pcl::PointXYZ> last_pointcloud_;
+  std::mutex pointcloud_mutex_;
 };
 
 std::ostream& operator<<(std::ostream& os, const Turtle::Options& options);

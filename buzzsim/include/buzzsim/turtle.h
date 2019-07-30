@@ -110,6 +110,9 @@ private:
 
   tf::TransformBroadcaster broadcaster_;
   IMUNoise imu_noise_;
+  motion::State last_state_{};
+  ros::Time last_time_{};
+
   Lidar lidar_;
   LidarPainter lidar_painter_;
   pcl::PointCloud<pcl::PointXYZ> last_pointcloud_;

@@ -58,7 +58,7 @@ WorldConfigParser::SpawnOptions WorldConfigParser::parseWorld(const YAML::Node& 
     throw std::runtime_error("\"turtles\" key is not defined for world.");
   }
 
-  SpawnOptions spawn_options;
+  SpawnOptions spawn_options{};
   int image_num = 0;
   for (const auto& turtle : turtles)
   {
@@ -71,7 +71,10 @@ WorldConfigParser::SpawnOptions WorldConfigParser::parseWorld(const YAML::Node& 
 
     image_num = (image_num + 1) % static_cast<int>(images_.size());
   }
-  spawn_options.obstacles = world["obstacles"].as<std::vector<Obstacle>>();
+  if (world["obstacles"].IsDefined())
+  {
+    spawn_options.obstacles = world["obstacles"].as<std::vector<Obstacle>>();
+  }
 
   ROS_INFO_STREAM("Options: " << spawn_options);
 

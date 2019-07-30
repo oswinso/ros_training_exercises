@@ -23,6 +23,7 @@ Turtle::Turtle(const Options& options, const std::vector<Obstacle>* obstacles)
   , obstacles_{ obstacles }
   , turtle_image_{ options.turtle_image }
   , imu_noise_{ options.imu_std_devs_ }
+  , last_state_{ options.state }
   , lidar_{ options.lidar_options_ }
   , lidar_painter_{ options.lidar_painter_options_, options.lidar_options_ }
 {
@@ -145,11 +146,21 @@ void Turtle::publishTransform()
 
 void Turtle::publishIMU()
 {
+  if (last_time_.sec == 0)
+  {
+    last_time_ = ros::Time::now();
+    return;
+  }
+
+  ros::Time current_time = ros::Time::now();
+  ros::Duration delta_t = current_time - last_time_;
+  double acceleration = (state_.twist.linear - last_state_.twist.linear) / delta_t.toSec();
+
   sensor_msgs::Imu msg{};
   msg.header.frame_id = name_;
-  msg.header.stamp = ros::Time::now();
+  msg.header.stamp = current_time;
   msg.angular_velocity.z = state_.twist.angular + imu_noise_.gyroNoise();
-  msg.linear_acceleration.x = acceleration_.linear + imu_noise_.accelerometerNoise();
+  msg.linear_acceleration.x = acceleration + imu_noise_.accelerometerNoise();
   msg.orientation = tf::createQuaternionMsgFromYaw(state_.pose.orientation + imu_noise_.magnetometerNoise());
 
   msg.linear_acceleration_covariance[0] = imu_noise_.imu_std_devs_.accelerometer;
@@ -157,6 +168,9 @@ void Turtle::publishIMU()
   msg.orientation_covariance[0] = imu_noise_.imu_std_devs_.magnetometer;
 
   imu_pub_.publish(msg);
+
+  last_time_ = current_time;
+  last_state_ = state_;
 }
 
 void Turtle::publishLidar()

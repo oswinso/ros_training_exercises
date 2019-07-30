@@ -10,9 +10,9 @@ limits: &limits
     angular: 2
 
 imu_covariances: &imu_covariances
-  accelerometer: 0.0
-  gyro: 0.0
-  magnetometer: 0.0
+  accelerometer: 0.01
+  gyro: 0.1
+  magnetometer: 0.002
 
 oswin: &oswin
   imu_covariances: *imu_covariances

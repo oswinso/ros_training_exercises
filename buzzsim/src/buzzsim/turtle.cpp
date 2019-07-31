@@ -140,7 +140,7 @@ void Turtle::publishTransform()
   transform.setOrigin({ state_.pose.position.x, state_.pose.position.y, 0.0 });
   transform.setRotation(tf::createQuaternionFromYaw(state_.pose.orientation));
 
-  tf::StampedTransform stamped_transform{ transform, ros::Time::now(), "odom", "oswin" };
+  tf::StampedTransform stamped_transform{ transform, ros::Time::now(), "odom", name_ };
   broadcaster_.sendTransform(stamped_transform);
 }
 

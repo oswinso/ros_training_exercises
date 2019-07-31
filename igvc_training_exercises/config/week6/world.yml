@@ -15,7 +15,27 @@ lidar_options: &lidar_options
   range: 10
   angular_resolution: 0.01 # Rad
 
-obstacles: &obstacles
+simple_obstacles: &simple_obstacles
+  - type: barrel
+    center: [0.0, 0.0]
+  - type: barrel
+    center: [0.0, 1.0]
+  - type: barrel
+    center: [0.0, -1.0]
+  - type: barrel
+    center: [2.0, 2.0]
+  - type: barrel
+    center: [2.0, 3.0]
+  - type: barrel
+    center: [2.0, 1.0]
+  - type: barrel
+    center: [4.0, -2.0]
+  - type: barrel
+    center: [4.0, -3.0]
+  - type: barrel
+    center: [4.0, -1.0]
+
+complex_obstacles: &complex_obstacles
   - type: barrel
     center: [0.2, 0.5]
   - type: barrel
@@ -64,8 +84,13 @@ kyle: &kyle
     pose: true
 
 worlds:
-  path_planning:
+  simple:
     turtles:
       oswin: *oswin
       kyle: *kyle
-    obstacles: *obstacles
+    obstacles: *simple_obstacles
+  complex:
+    turtles:
+      oswin: *oswin
+      kyle: *kyle
+    obstacles: *complex_obstacles

@@ -1,25 +1,3 @@
-<style type="text/css" rel="stylesheet">
-a[href="#spoiler"] {
-  text-decoration: none !important;
-  cursor: default;
-  margin-bottom: 10px;
-  padding: 10px;
-  background-color: #FFF8DC;
-  border-left: 2px solid #ffeb8e;
-  display: inline-block;
-}
-a[href="#spoiler"]::after {
-  content: attr(title);
-  color: #FFF8DC;
-  padding: 0 0.5em;
-}
-a[href="#spoiler"]:hover::after,
-a[href="#spoiler"]:active::after {
-  cursor: auto;
-  color: black;
-  transition: color .5s ease-in-out;
-}
-</style>
 # Week 2
 Welcome to Week 2 of ROS training exercises! We'll be learning how to write **ROS Publishers** and **Subscribers**
 with C++.
@@ -49,7 +27,7 @@ catkin_make
 
 Now, try running the executable with `rosrun`. The ROS package is called `igvc_training_exercises`, and the node is
 called `week2`. You can refer back to [week 1](week1.md) on the details of the command if you forgot. Otherwise,
-here's the [answer](#spoiler "rosrun igvc_training_exercises week2").
+here's the [answer (Hover over me)](#spoiler "rosrun igvc_training_exercises week2").
 
 Verify that Hello World correctly prints out:
 ```

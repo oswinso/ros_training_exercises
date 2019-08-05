@@ -157,9 +157,9 @@ int main(int argc, char** argv)
   ros::Subscriber kyle_pose_sub = nh.subscribe("kyle/ground_truth", 1, &kylePoseCallback);
 
   g_map.info.width = 200;
-  g_map.info.height = 500;
+  g_map.info.height = 200;
   g_map.info.origin.position.x = -10;
-  g_map.info.origin.position.y = -25;
+  g_map.info.origin.position.y = -10;
   g_map.info.origin.orientation = tf::createQuaternionMsgFromYaw(0.0);
   g_map.info.resolution = 0.1;
   g_map.header.frame_id = "odom";

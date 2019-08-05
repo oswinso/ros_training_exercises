@@ -53,7 +53,7 @@ oswin: &oswin
   publishers: *publish_pose_and_lidar
 
 worlds:
-  fast_slam:
+  slam:
     turtles:
       oswin: *oswin
     obstacles: *obstacles

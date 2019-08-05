@@ -7,7 +7,7 @@ Obstacle Polygon::toObstacle() const
 
 Obstacle Barrel::toObstacle() const
 {
-  constexpr int num_points = 8;
+  constexpr int num_points = 64;
   constexpr double d_theta = (2 * M_PI) / num_points;
 
   std::vector<motion::Position> points;

@@ -19,8 +19,6 @@ simple_obstacles: &simple_obstacles
   - type: barrel
     center: [0.0, 0.0]
   - type: barrel
-    center: [0.0, 1.0]
-  - type: barrel
     center: [0.0, -1.0]
   - type: barrel
     center: [2.0, 2.0]
@@ -29,11 +27,15 @@ simple_obstacles: &simple_obstacles
   - type: barrel
     center: [2.0, 1.0]
   - type: barrel
-    center: [4.0, -2.0]
+    center: [5.0, -2.0]
   - type: barrel
-    center: [4.0, -3.0]
+    center: [5.0, -3.0]
   - type: barrel
-    center: [4.0, -1.0]
+    center: [5.0, -1.0]
+  - type: barrel
+    center: [5.0, 0.0]
+  - type: barrel
+    center: [5.0, 1.0]
 
 complex_obstacles: &complex_obstacles
   - type: barrel

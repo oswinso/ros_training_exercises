@@ -1,4 +1,4 @@
-# Week1
+# Week 1
 Welcome to Week 1 of ROS training exercises! I will first give a brief overview of what ROS is,
 then we will learn the basics of ROS nodes and learn how to launch nodes.
 
@@ -85,7 +85,7 @@ You should see a few topics:
 
 Notice that the `/oswin/velocity` topic is shown here. We can get more information about a ROS topic
 with the `info` command:
-```bash
+```
 Type: geometry_msgs/Twist
 
 Publishers: None
@@ -98,6 +98,7 @@ Here, we can see that this topic is of type `geometry_msgs/Twist`, has no `Publi
 which is the `buzzsim` node. The type of a topic is the type of message of that topic. In this case, it is
 `geometry_msgs/Twist`, which contains information about the velocity of the robot.
 
+### `rostopic echo`
 We can see exactly what is being sent on a topic with the `echo` command:
 ```bash
 rostopic echo /oswin/velocity
@@ -112,7 +113,7 @@ rosrun teleop_twist_keyboard teleop_twist_keyboard.py cmd_vel:=/oswin/velocity
 
 This time when you move the turtle around using the keyboard teleop, you should see the exact messages being published
 in the terminal window with `rostopic echo`, something like:
-```bash
+```
 linear:
   x: 0.5
   y: 0.0
@@ -123,6 +124,7 @@ angular:
   z: 0.0
 ```
 
+### `rostopic pub`
 We can also publish the messages directly from the command line also, using the `pub` command. Close the `teleop_twist_keyboard`
 node again, and then run the following:
 ```bash
@@ -152,3 +154,6 @@ angular:
 
 Try playing around with the the `x` part of `linear` and the `z` part of `angular`, and seeing how the turtle
 moves.
+
+And that is it for week 1 of the exercises. In [week2](week2.md), we'll be looking at how to write **ROS Publishers**
+and **ROS Subscribers** in C++.

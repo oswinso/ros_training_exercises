@@ -24,6 +24,7 @@ catkin_package(CATKIN_DEPENDS
 
 include_directories(include)
 
+add_subdirectory(src/week2)
 add_subdirectory(src/week3)
 add_subdirectory(src/week4)
 add_subdirectory(src/week5)

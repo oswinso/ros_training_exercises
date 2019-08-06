@@ -8,7 +8,7 @@ figure out how we can write a node in C++ first.
 
 ### Hello World with ROS and C++
 Let's start by writing Hello World with ROS and C++. Starting off with a normal C++ Hello World in
-[igvc_training_exercises/src/week2/publisher.cpp](../igvc_training_exercises/src/week2/publisher.cpp):
+[publisher.cpp](../igvc_training_exercises/src/week2/publisher.cpp):
 ```C++
 #include <iostream>
 
@@ -375,5 +375,21 @@ the message.
   
 </details>
 
-And that's it for this week! Next week, we'll learn about launch files and PID, and get to play with the
-simulator (finally).
+<details>
+  <summary>4. A "safety" node for the simulator</summary>
+  
+  Write a node that's actually (somewhat) useful: A "safety" node that takes in `geometry_msgs/Twist` commands,
+  and if the linear speed is too high, send a command with all 0s instead telling the robot to stop.
+  
+  Write this node in
+  [exercises/safety_node.cpp](../igvc_training_exercises/src/week2/exercises/safety_node.cpp).
+  
+  We want to stop the robot if the **speed** is above a certain limit. We can do this easily by taking the absolute
+  value of the velocity with the `std::abs` function.
+  
+  [Hint](#spoiler 'Have the node read from a topic like "/oswin/velocity_unsafe". You can then either rostopic pub
+  or use the teleop_twist_keyboard command with the topic set to "/oswin/velocity_unsafe" to test it out')
+</details>
+
+And that's it for this week! Next week, we'll learn about launch files and PID, and get to (properly) play with the
+simulator.

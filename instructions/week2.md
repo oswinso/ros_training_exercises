@@ -321,51 +321,59 @@ the message.
   ```
 </details>
 
-### 2. A subscriber for `std_msgs::String`
-Write a subscriber that subscribes to the `/warning` topic with the `std_msgs::String` message type, and print out the
-contents of the message received in the callback function using `ROS_WARN_STREAM` instead of `ROS_INFO_STREAM`.
+<details>
+  <summary>2. A subscriber for <code>std_msgs::String</code></summary>
+  
+  Write a subscriber that subscribes to the `/warning` topic with the `std_msgs::String` message type, and print out the
+  contents of the message received in the callback function using `ROS_WARN_STREAM` instead of `ROS_INFO_STREAM`.
+  
+  Remember to `#include <std_msgs::String>` to be able to use that type.
+  
+  How can you test that your subscriber is working? 
+  [Hint](#spoiler 'Use the "rostopic pub" command. Tab-completion works here, so keep pressing tab.'),
+  [Answer](#spoiler 'rostopic pub /my_string std_msgs/String "data: \'Hello World!\'"').
+  
+</details>
 
-Remember to `#include <std_msgs::String>` to be able to use that type.
-
-How can you test that your subscriber is working? 
-[Hint](#spoiler 'Use the "rostopic pub" command. Tab-completion works here, so keep pressing tab.'),
-[Answer](#spoiler 'rostopic pub /my_string std_msgs/String "data: \'Hello World!\'"').
-
-### 3. A subscriber that publishes if the received number is even
-Write a subscriber that subscribes to the same `my_number` topic as before in the
-[exercises/even_publisher.cpp](../igvc_training_exercises/src/week2/exercises/even_publisher.cpp).
-Instead of just printing it out though, this time have the node check if the number even. If the number is even,
-have the node publish the received number to a new topic `even_number`, otherwise do nothing.
-
-This will require you to make the `ros::Publisher` a **global variable** instead of a **local variable** inside of the `main`
-function, so that you can use the publisher variable inside the callback.
-
-Instead of defining the `ros::Publisher` as a **local variable** inside of the main function, ie.
-```c++
-int main(int argc, char** argv)
-{
-  ...
-  ros::Publisher even_publisher = nh.advertise<std_msgs::Int32>("even_number", 1);
-}
-```
-
-Define it as a **global variable** right below the includes, ie.
-
-```c++
-ros::Publisher g_even_publisher;
-int main(int argc, char** argv)
-{
-  ...
-  g_even_publisher = nh.advertise<std_msgs::Int32>("even_number", 1);
-}
-```
-
-Notice that we add the `g_` prefix to the variable name. This is to follow thet ROS style guide, so that we can easily
-tell which variables are **global variables**.
-
-How can you tell if a number is even? 
-[Hint](#spoiler 'The % (modulo) operator returns the remainder after division of one number by another.'),
-[Answer](#spoiler 'message.data % 2 == 0').
+<details>
+  <summary>3. A subscriber that publishes if the received number is even</summary>
+  
+  Write a subscriber that subscribes to the same `my_number` topic as before in the
+  [exercises/even_publisher.cpp](../igvc_training_exercises/src/week2/exercises/even_publisher.cpp).
+  Instead of just printing it out though, this time have the node check if the number even. If the number is even,
+  have the node publish the received number to a new topic `even_number`, otherwise do nothing.
+  
+  This will require you to make the `ros::Publisher` a **global variable** instead of a **local variable** inside of the `main`
+  function, so that you can use the publisher variable inside the callback.
+  
+  Instead of defining the `ros::Publisher` as a **local variable** inside of the main function, ie.
+  ```c++
+  int main(int argc, char** argv)
+  {
+    ...
+    ros::Publisher even_publisher = nh.advertise<std_msgs::Int32>("even_number", 1);
+  }
+  ```
+  
+  Define it as a **global variable** right below the includes, ie.
+  
+  ```c++
+  ros::Publisher g_even_publisher;
+  int main(int argc, char** argv)
+  {
+    ...
+    g_even_publisher = nh.advertise<std_msgs::Int32>("even_number", 1);
+  }
+  ```
+  
+  Notice that we add the `g_` prefix to the variable name. This is to follow thet ROS style guide, so that we can easily
+  tell which variables are **global variables**.
+  
+  How can you tell if a number is even? 
+  [Hint](#spoiler 'The % (modulo) operator returns the remainder after division of one number by another.'),
+  [Answer](#spoiler 'message.data % 2 == 0').
+  
+</details>
 
 And that's it for this week! Next week, we'll learn about launch files and PID, and get to play with the
 simulator (finally).

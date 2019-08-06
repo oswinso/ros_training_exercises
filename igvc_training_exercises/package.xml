@@ -19,5 +19,6 @@
 
     <depend>roscpp</depend>
     <depend>tf</depend>
+    <depend>std_msgs</depend>
     <depend>igvc_buzzsim</depend>
 </package>

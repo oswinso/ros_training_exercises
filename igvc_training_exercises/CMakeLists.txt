@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
+  std_msgs
   igvc_buzzsim)
 
 ###################################
@@ -20,6 +21,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(CATKIN_DEPENDS
   roscpp
   tf
+  std_msgs
   igvc_buzzsim)
 
 include_directories(include)

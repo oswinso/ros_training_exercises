@@ -8,7 +8,7 @@ figure out how we can write a node in C++ first.
 
 ### Hello World with ROS and C++
 Let's start by writing Hello World with ROS and C++. Starting off with a normal C++ Hello World in
-[igvc_training_exercises/src/week2/main.cpp](../igvc_training_exercises/src/week2/main.cpp):
+[igvc_training_exercises/src/week2/publisher.cpp](../igvc_training_exercises/src/week2/publisher.cpp):
 ```C++
 #include <iostream>
 
@@ -27,7 +27,7 @@ catkin_make
 
 Now, try running the executable with `rosrun`. The ROS package is called `igvc_training_exercises`, and the node is
 called `week2`. You can refer back to [week 1](week1.md) on the details of the command if you forgot. Otherwise,
-here's the [answer (Hover over me)](#spoiler "rosrun igvc_training_exercises week2").
+here's the [answer (Hover over me)](#spoiler "rosrun igvc_training_exercises week2_publisher").
 
 Verify that Hello World correctly prints out:
 ```
@@ -41,7 +41,7 @@ Start by adding an *include* for the ROS headers at the top of the file. Don't w
 this in general software training later.
 
 ```c++
-#include <ros/ros.h> // Add this line
+#include <ros/ros.h> // <-- Add this line
 
 #include <iostream>
 ...
@@ -51,7 +51,7 @@ Next, add the following line above the `std::cout`:
 ```c++
 int main(int argc, char** argv)
 {
-  ros::init(argc, argv, "week2"); // Add this line
+  ros::init(argc, argv, "week2"); // <-- Add this line
 
   std::cout << "Hello World!" << std::endl;
 }
@@ -63,12 +63,12 @@ can't actually tell that it's working, because the program is exciting right aft
 program wait, add this line after `std::cout`:
 
 ```c++
-int main(iunt argc, char** argv)
+int main(int argc, char** argv)
 {
   ros::init(argc, argv, "week2");
 
   std::cout << "Hello World!" << std::endl;
-  ros::spin(); // Add this line
+  ros::spin(); // <-- Add this line
 }
 ```
 
@@ -81,3 +81,291 @@ and type in `rosnode list`. You should see the `week2` node show up:
 /rosout
 /week2
 ```
+
+### Writing a simple publisher
+Now, let's write a simple publisher that publishes a number. To do that, we need to do two things:
+
+1. Create the `ros::Publisher`
+
+To do this, we first need to create a `ros::NodeHandle`. You can think of the `ros::NodeHandle` as a "handle" for the
+ROS node - it acts as the main access point for a lot of the ROS functionality, such as creating ROS publishers and subscribers.
+
+Create a `ros::NodeHandle` by adding the following line in the main function:
+
+```c++
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "week2");
+  ros::NodeHandle nh; // <-- Add this line
+
+  std::cout << "Hello World!" << std::endl;
+  ros::spin();
+}
+```
+
+After creating the `ros::NodeHandle`, we can now create a `ros::Publisher` for the node. `ros::NodeHandle` has a function
+`advertise` that creates a `ros::Publisher` and returns it. Before we create the `ros::Publisher` though, we need to tell
+ROS what message type we will be publishing. In this case, since we want to publish a number, we can use the built-in
+`std_msgs::Int32` message type. We also need the name of a topic to which we'll be publishing the messages on, which we'll
+set to `my_number`
+
+Add an include for the `std_msgs/Int32.h`:
+```c++
+#include <ros/ros.h>
+#include <std_msgs/Int32.h> // <-- Add this line
+
+#include <iostream>
+...
+```
+
+Then call the function on the `nh` node handle we just created, and store the result in a publisher:
+
+```c++
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "week2");
+  ros::NodeHandle nh;
+
+  ros::Publisher integer_pub = nh.advertise<std_msgs::Int32>("my_number", 1); // <-- Add this line
+
+  std::cout << "Hello World!" << std::endl;
+  ros::spin();
+}
+```
+
+Notice that we specify the type of the message, `std_msgs::Int32`, as a **template argument** to the `advertise` function.
+Don't worry about the details of how that works for now, we'll cover templates in a later week during general software
+training. We specify the topic name as the first argument, and the queue size in the second argument. We have a queue size
+of 1 set, meaning that we only want to publish the newest message if. Don't worry about the queue size for now.
+
+Now that we've got a publisher, let's publish a message. To do that, we first need to create the message which we want to
+publish in a variable.
+
+```c++
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "week2");
+  ros::NodeHandle nh;
+
+  ros::Publisher integer_pub = nh.advertise<std_msgs::Int32>("my_number", 1);
+  
+  std_msgs::Int32 message; // <-- Add this line
+
+  std::cout << "Hello World!" << std::endl;
+  ros::spin();
+}
+```
+
+After creating the message variable, we need to assign the message some data. To find out what **fields** are in a message,
+we can make use of Clion's handy autocomplete. Type `message.` in the line below, and Clion should show the different fields
+of a particular variable. In this case, we see that the `std_msgs::Int32` type has one field called `data`, which has a type
+of `int`. Set the variable to any number you like:
+
+```c++
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "week2");
+  ros::NodeHandle nh;
+
+  ros::Publisher integer_pub = nh.advertise<std_msgs::Int32>("my_number", 1);
+  
+  std_msgs::Int32 message;
+  message.data = 13; // <-- Add this line
+
+  std::cout << "Hello World!" << std::endl;
+  ros::spin();
+}
+```
+
+Finally, we can publish the message by calling `integer_pub.publish` and passing the `std_msgs::Int32` message we just created
+as an argument:
+
+```c++
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "week2");
+  ros::NodeHandle nh;
+
+  ros::Publisher integer_pub = nh.advertise<std_msgs::Int32>("my_number", 1);
+  
+  std_msgs::Int32 message;
+  message.data = 13;            // <-- Add these lines
+  integer_pub.publish(message); // <--
+
+  std::cout << "Hello World!" << std::endl;
+  ros::spin();
+}
+```
+
+One problem right now though is that the publisher needs to wait for the subscriber to connect first before publishing,
+otherwise the message will be published before the subscriber can connect. A simple, though not the best fix we can do
+is to add in a `ros::Duration(1).sleep()` to make the program sleep for one second before publishing:
+
+```c++
+int main(int argc, char** argv)
+{
+  ros::init(argc, argv, "week2");
+  ros::NodeHandle nh;
+
+  ros::Publisher integer_pub = nh.advertise<std_msgs::Int32>("my_number", 1);
+
+  ros::Duration(1).sleep() // <-- Add in a sleep here to give time to subscribers to connect.
+  
+  std_msgs::Int32 message;
+  message.data = 13;
+  integer_pub.publish(message);
+
+  std::cout << "Hello World!" << std::endl;
+  ros::spin();
+}
+```
+
+Compile again with `catkin_make`, then run the node with `rosrun`. A message should be published to the `my_number` topic
+with the number you sent. What command can you run to see the message that is published?
+[Hint](#spoiler "rostopic echo") [Answer](#spoiler "rostopic echo /my_number").
+
+Make sure you run the command before you launch the `week2` node. You should see something like this.
+```
+data: 13
+---
+```
+
+### Writing a simple subscriber
+Now that we've written a publisher, let's write a subscriber. Start off by setting up the node with `ros::init` in the 
+[subscriber.cpp](../igvc_training_exercises/src/week2/subscriber.cpp) file, but with a node name of `subscriber` instead.
+Refer back to the [publisher.cpp](../igvc_training_exercises/src/week2/publisher.cpp) file or above if you need to.
+[Answer](#spoiler 'ros::init(argc, argv, "subscriber")'). Don't forget to add `#include <ros/ros.h>` so that you can use
+the ros functions.
+
+Next, since we need to do ROS things, ie. create a Subscriber, we need a `ros::NodeHandle` also. Create one like before
+again. [Answer](#spoiler 'ros::NodeHandle nh')
+
+Now, we need to create a `ros::Subscriber`. Similar to how we created a `ros::Publisher`, we can create a `ros::Subscriber`
+by calling the `subscribe` function on the `ros::NodeHandle` like so:
+```c++
+ros::Subscriber integer_sub = nh.subscribe("my_number", 1, integerCallback);
+```
+
+One thing different about writing a `ros::Subscriber` is that we need to write a **callback function**, which in here would
+be the `integerCallback` function (which we haven't written yet, so Clion gives us an error).
+
+#### ROS Subscribers and callbacks
+What is a **callback function**? For a ROS subscriber **callback function** is a function that is called when a new message
+is received. For example, in the example above, we've told ROS that we want the `integerCallback` function to be called
+whenever we receive a message. So, if the `integerCallback` function was something like below
+
+```c++
+void integerCallback(std_msgs::Int32 message)
+{
+  std::cout << "I received a message: " << message.data << std::endl;
+}
+```
+
+then you can understand it as if the ROS library was calling your **callback function** with the message that was received:
+
+```c++
+integerCallback(new_message) // You can imagine that this is happening somewhere.
+```
+
+#### Creating the callback function and ROS_INFO_STREAM
+Let's create the callback function. Add this function above the `main` function:
+
+```c++
+void integerCallback(std_msgs::Int32 message)
+{
+  ROS_INFO_STREAM("I received a message: " << message.data);
+}
+```
+
+One thing to notice is that instead of using `std::cout`, we are using `ROS_INFO_STREAM` here. `ROS_INFO_STREAM` is a
+convenient method that ROS provides us for logging things. Usually, it is better to use `ROS_INFO_STREAM` than just
+`std::cout`, because `ROS_INFO_STREAM` also includes a timestamp.
+
+Try compiling with `catkin_make` and testing it out. Run the subscriber node first with rosrun
+([Answer](#spoiler "rosrun igvc_training_exercises week2_subscriber")), then running the publisher node as before.
+
+
+And...... nothing gets printed. What's happening?
+
+#### ros::spin()
+The reason why nothing is happening is because the subscriber node doesn't have the `ros::spin` line that we put in the
+publisher node.
+
+Besides stopping the program from exiting until we hit Ctrl-C, calling `ros::spin` also hands control of the program to
+ROS, so that ROS can do all the behind-the-scenes work. In this case, this would be calling the respective callback
+functions when a new message comes in.
+
+Let's add the missing `ros::spin` function right after we call `nh.subscribe`, and then recompile. Now, when you run the
+subscriber and publisher, you should see the subscriber print out the message correctly:
+
+```
+[ INFO] [1565078804.617569525]: I received a message: 13
+```
+
+If you're not seeing the message print correctly, make sure that you run the subscriber node first, and then the
+publisher node afterwards, otherwise the publisher node might publish before the subscriber node has a chance to receive
+the message.
+
+## Exercises
+<details>
+  <summary><h3>1. A publisher that prints a sequence of numbers</h3></summary>
+  
+  Now that you've written a simple publisher and subscriber, instead of publishing just a single number, publish the
+  numbers from 0 to 99 in [exercises/loop_publisher.cpp](../igvc_training_exercises/src/week2/exercises/loop_publisher.cpp)
+  on the same `my_number` topic. To do this, you will need to use a for loop. In case you forgot how to write a for loop:
+
+  ```
+  for (int i = 0; i < 100; i++)
+  {
+  }
+  ```
+</details>
+
+### 2. A subscriber for `std_msgs::String`
+Write a subscriber that subscribes to the `/warning` topic with the `std_msgs::String` message type, and print out the
+contents of the message received in the callback function using `ROS_WARN_STREAM` instead of `ROS_INFO_STREAM`.
+
+Remember to `#include <std_msgs::String>` to be able to use that type.
+
+How can you test that your subscriber is working? 
+[Hint](#spoiler 'Use the "rostopic pub" command. Tab-completion works here, so keep pressing tab.'),
+[Answer](#spoiler 'rostopic pub /my_string std_msgs/String "data: \'Hello World!\'"').
+
+### 3. A subscriber that publishes if the received number is even
+Write a subscriber that subscribes to the same `my_number` topic as before in the
+[exercises/even_publisher.cpp](../igvc_training_exercises/src/week2/exercises/even_publisher.cpp).
+Instead of just printing it out though, this time have the node check if the number even. If the number is even,
+have the node publish the received number to a new topic `even_number`, otherwise do nothing.
+
+This will require you to make the `ros::Publisher` a **global variable** instead of a **local variable** inside of the `main`
+function, so that you can use the publisher variable inside the callback.
+
+Instead of defining the `ros::Publisher` as a **local variable** inside of the main function, ie.
+```c++
+int main(int argc, char** argv)
+{
+  ...
+  ros::Publisher even_publisher = nh.advertise<std_msgs::Int32>("even_number", 1);
+}
+```
+
+Define it as a **global variable** right below the includes, ie.
+
+```c++
+ros::Publisher g_even_publisher;
+int main(int argc, char** argv)
+{
+  ...
+  g_even_publisher = nh.advertise<std_msgs::Int32>("even_number", 1);
+}
+```
+
+Notice that we add the `g_` prefix to the variable name. This is to follow thet ROS style guide, so that we can easily
+tell which variables are **global variables**.
+
+How can you tell if a number is even? 
+[Hint](#spoiler 'The % (modulo) operator returns the remainder after division of one number by another.'),
+[Answer](#spoiler 'message.data % 2 == 0').
+
+And that's it for this week! Next week, we'll learn about launch files and PID, and get to play with the
+simulator (finally).

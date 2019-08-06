@@ -308,7 +308,7 @@ the message.
 
 ## Exercises
 <details>
-  <summary><h3>1. A publisher that prints a sequence of numbers</h3></summary>
+  <summary>1. A publisher that prints a sequence of numbers</summary>
   
   Now that you've written a simple publisher and subscriber, instead of publishing just a single number, publish the
   numbers from 0 to 99 in [exercises/loop_publisher.cpp](../igvc_training_exercises/src/week2/exercises/loop_publisher.cpp)

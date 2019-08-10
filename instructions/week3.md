@@ -174,15 +174,18 @@ Put this publisher in the global variable `g_velocity_pub` so that we can access
 
 ##### Implement a proportional controller in the callback for `/oswin/ground_truth`
 Now its time to implement a controller. We'll start with the proportional controller.
-1. Calculate the error in x-coordinate between the two turtles.
-2. Create a variable `kp` to store the 
+<ol>
+<li>Calculate the error in x-coordinate between the two turtles.</li>
+<li>Create a variable `kp` to store the
 <img src="https://latex.codecogs.com/svg.latex?\inline&space;K_p" title="K_p" />
-coefficient.
-3. Calculate 
+coefficient.</li>
+<li>Calculate 
 <img src="https://latex.codecogs.com/svg.latex?\inline&space;P_{out}&space;=&space;K_p&space;\,&space;e(t)" title="P_{out} = K_p \, e(t)" />
-4. Publish
+</li>
+<li>Publish
 <img src="https://latex.codecogs.com/svg.latex?\inline&space;P_{out}" title="P_{out}" />
-to the publisher you created earlier
+to the publisher you created earlier</li>
+</ol>
 
 With `kp = 1`, after you compile and `roslaunch` you should then see the bottom turtle move up and stop exactly where
 top turtle is.

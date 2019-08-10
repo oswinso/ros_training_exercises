@@ -391,5 +391,5 @@ the message.
   or use the teleop_twist_keyboard command with the topic set to "/oswin/velocity_unsafe" to test it out')
 </details>
 
-And that's it for this week! Next week, we'll learn about launch files and PID, and get to (properly) play with the
+And that's it for this week! [Next week](week3.md), we'll learn about launch files and PID, and get to (properly) play with the
 simulator.

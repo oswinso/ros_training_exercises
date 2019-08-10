@@ -231,3 +231,68 @@ between the `<node>` tag that launches the `week3` node like below:
 
 If you launch the node now, you should see that the the correct value of the `kp` parameter is printed and you can change
 the value in the `week3.launch` and the node should use the new value without needing to recompile.
+
+#### Visualizing data with `rqt_plot`
+It would be useful to be able to visualize the error by plotting a graph of it. Create a publisher of type 
+`std_msgs::Float64` on the topic "error", then publish the error variable that you calculated in the callback for `/oswin/ground_truth`.
+How can you verify that it is publishing correctly? 
+[Hint](#spoiler 'You can try seeing whats being published on the topic. "rostopic" is your friend.')
+[Answer](#spoiler 'rostopic echo /error')
+
+ROS comes with the tool `rqt_plot` that's useful for plotting graphs and visualizing data. Open the tool:
+```bash
+rqt_plot
+```
+
+To add the `/error` topic to the graph, type `/error` at the top. Now try launching the simulation and the controller.
+You should see a graph like below:
+![rqt_plot_p](rqt_plot_p.png)
+
+Try playing with `kp` again, and verify that the graph shows what you see happening in the simulator.
+
+#### A moving target, and implementing an integral controller
+Let's try a moving target this time. Do this by using Ctrl-/ and commenting the `<param name="world_name" value="stationary" />` line
+and uncommenting the line below in the [week3.launch](../igvc_training_exercises/launch/week3.launch) file.
+
+It should look like this:
+```launch
+<launch>
+    <node pkg="igvc_buzzsim" type="buzzsim" name="buzzsim">
+        <param name="config_path" value="$(find igvc_training_exercises)/config/week3/world.yml" />
+<!--        <param name="world_name" value="stationary" />-->
+        <param name="world_name" value="moving" />
+    </node>
+
+    <node pkg="igvc_training_exercises" type="week3" name="week3" output="screen">
+        <param name="kp" value="1.0" />
+    </node>
+</launch>
+```
+
+Now if you `roslaunch` again, you should see the top turtle start to move. Does your proportional controller work?
+Verify what you're seeing by checking `rqt_plot`.
+
+The error that you're seeing is called **steady state error**. As we explained earlier, the integral controller part of
+PID helps to solve this.
+<details>
+  <summary>Implement an integral controller</summary>
+  
+  Implement an integral controller then use the sum of both the proportional and integral controllers as the controller
+  output.
+  
+  [Hint 1](#spoiler 'To integrate, you will need two things: an accumulator variable, as well as a way to calculate the
+  the time between the current message and the past message. The ros::Time type and ros::Time::now() should be helpful.
+  You will need to create a global variable to store the previous time.')
+  [Hint 2](#spoiler 'The ros::Time variable initializes with all zeros, which is the wrong time. You can a global
+  boolean like g_initialized, and then set your previous_time variable to the current time if its not initialized')
+  [Hint 3](#spoiler 'Make ki a parameter so that you can tune its value without recompiling.')
+  
+  You should be able to eliminate the steady state error now.
+</details>
+
+#### Finishing up PID: Adding the derivative controller
+Now that we've got both proportional and integral, its time to add the final part: derivative.
+
+And that's it for this week! We've learnt about `roslaunch` and `.launch` files, ROS parameters, PID control and
+basic control theory, and we've written our own PID controller for the simulator. [Next week](week4.md) we'll learn
+about reference frames, the IMU, and localization with dead reckoning by integrating IMU data.

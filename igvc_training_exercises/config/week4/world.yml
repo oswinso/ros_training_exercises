@@ -19,7 +19,7 @@ oswin: &oswin
   state:
     pose:
       position:
-        x: -5
+        x: 0
         y: 0
     twist:
       linear: 0

@@ -26,7 +26,7 @@ catkin_make
 ```
 
 Now, try running the executable with `rosrun`. The ROS package is called `igvc_training_exercises`, and the node is
-called `week2`. You can refer back to [week 1](week1.md) on the details of the command if you forgot. Otherwise,
+called `week2_publisher`. You can refer back to [week 1](week1.md) on the details of the command if you forgot. Otherwise,
 here's the [answer (Hover over me)](#spoiler "rosrun igvc_training_exercises week2_publisher").
 
 Verify that Hello World correctly prints out:

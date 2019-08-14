@@ -1,6 +1,7 @@
 publish_imu: &publish_pose_and_lidar
   pose: true
   lidar: true
+  imu: true
 
 limits: &limits
   acceleration:
@@ -44,7 +45,7 @@ oswin: &oswin
   state:
     pose:
       position:
-        x: -5
+        x: 0
         y: 0
     twist:
       linear: 0

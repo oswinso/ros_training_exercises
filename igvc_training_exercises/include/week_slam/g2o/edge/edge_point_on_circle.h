@@ -3,7 +3,7 @@
 
 #include <Eigen/Core>
 #include <g2o/core/base_unary_edge.h>
-#include <week_slam/g2o/vertex_circle.h>
+#include <week_slam/g2o/vertex/vertex_circle.h>
 
 class EdgePointOnCircle : public g2o::BaseUnaryEdge<1, Eigen::Vector2d, VertexCircle>
 {

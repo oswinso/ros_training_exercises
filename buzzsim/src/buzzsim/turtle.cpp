@@ -129,7 +129,7 @@ void Turtle::publishPose()
 {
   geometry_msgs::PoseStamped msg;
   msg.pose = state_.pose.toROSMsg();
-  msg.header.frame_id = name_;
+  msg.header.frame_id = "odom";
   msg.header.stamp = ros::Time::now();
   pose_pub_.publish(msg);
 }

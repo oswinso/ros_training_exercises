@@ -28,6 +28,7 @@ SlamNode::SlamNode()
 
   setupG2o();
   setupGraph();
+  g2o::OptimizableGraph::initMultiThreading();
 }
 
 void SlamNode::setupG2o()
@@ -78,8 +79,8 @@ void SlamNode::addIMUEdge(const sensor_msgs::Imu& msg)
   // Create first node
   if (last_id == -1)
   {
-    ROS_INFO_STREAM("last_id == -1. Adding vertex with id " << last_vertex_);
-    last_imu_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(last_vertex_));
+    ROS_INFO_STREAM("last_id == -1. Adding vertex with id " << latest_pose_vertex_id_);
+    last_imu_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(latest_pose_vertex_id_));
   }
   else
   {
@@ -110,8 +111,8 @@ g2o::VertexRobotState* SlamNode::addVertex(const g2o::RobotState& state)
 {
   auto new_vertex = new g2o::VertexRobotState();
 
-  int old_vertex_id = last_vertex_;
-  int new_vertex_id = last_vertex_ + 1;
+  int old_vertex_id = latest_pose_vertex_id_;
+  int new_vertex_id = latest_vertex_id_ + 1;
 
   new_vertex->setId(new_vertex_id);
   new_vertex->setEstimate(state);
@@ -126,7 +127,9 @@ g2o::VertexRobotState* SlamNode::addVertex(const g2o::RobotState& state)
   holonomic_constraint->setVertex(1, new_vertex);
   optimizer_.addEdge(holonomic_constraint);
 
-  last_vertex_++;
+  latest_vertex_id_++;
+  latest_pose_vertex_id_ = latest_vertex_id_;
+
   return new_vertex;
 }
 
@@ -158,17 +161,69 @@ void SlamNode::lidarCallback(const pcl::PointCloud<pcl::PointXYZ>& msg)
   map_pub_.publish(mapper_.occupancy_grid_);
 
   addLandmarkEdges(landmarks);
+  optimizeGraph();
+  updateLandmarkLocations();
+}
+
+void SlamNode::updateLandmarkLocations()
+{
+  for (const auto [landmark_id, vertex_id] : landmark_map_)
+  {
+    auto landmark_vertex = static_cast<g2o::VertexPointXY*>(optimizer_.vertex(vertex_id));
+    landmark_registration_.updateLandmark(landmark_id, landmark_vertex->estimate());
+  }
 }
 
 void SlamNode::addLandmarkEdges(const std::vector<Landmark>& landmarks)
 {
-  // TODO(Oswin): Fill in
+  for (const auto& landmark : landmarks)
+  {
+    if (auto entry = landmark_map_.find(landmark.id); entry != landmark_map_.end())
+    {
+      addLandmarkEdge(entry->second, landmark);
+    }
+    else
+    {
+      int landmark_vertex_id = addLandmarkVertex(landmark);
+      addLandmarkEdge(landmark_vertex_id, landmark);
+    }
+  }
+}
+
+int SlamNode::addLandmarkVertex(const Landmark& landmark)
+{
+  int new_vertex_id = latest_vertex_id_ + 1;
+  latest_vertex_id_++;
+
+  auto landmark_vertex = new g2o::VertexPointXY{};
+  landmark_vertex->setEstimate(landmark.barrel.head<2>());
+  landmark_vertex->setId(new_vertex_id);
+
+  optimizer_.addVertex(landmark_vertex);
+
+  landmark_map_.emplace(std::make_pair(landmark.id, new_vertex_id));
+  return new_vertex_id;
+}
+
+void SlamNode::addLandmarkEdge(int vertex_id, const Landmark& landmark)
+{
+  auto pose_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(latest_pose_vertex_id_));
+  auto landmark_vertex = static_cast<g2o::VertexPointXY*>(optimizer_.vertex(vertex_id));
+  // TODO(Oswin): Properly find the vertex
+
+  auto* landmark_edge = new g2o::EdgeLandmark();
+  landmark_edge->setMeasurement(landmark.barrel.head<2>());
+  landmark_edge->setVertex(0, pose_vertex);
+  landmark_edge->setVertex(1, landmark_vertex);
+  landmark_edge->setInformation(Eigen::Matrix<double, 2, 2>::Identity());
+
+  optimizer_.addEdge(landmark_edge);
 }
 
 void SlamNode::publishLandmarks(const std::vector<Landmark>& landmarks)
 {
   pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.header.frame_id = "odom";
+  cloud.header.frame_id = "oswin";
 
   for (const auto& landmark : landmarks)
   {
@@ -181,7 +236,7 @@ void SlamNode::publishLandmarks(const std::vector<Landmark>& landmarks)
 
 void SlamNode::publishLatestPose()
 {
-  auto& robot_state = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(last_vertex_))->estimate();
+  auto& robot_state = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(latest_pose_vertex_id_))->estimate();
 
   nav_msgs::Odometry odometry;
   odometry.pose.pose.orientation = tf::createQuaternionMsgFromYaw(robot_state.se2().rotation().angle());

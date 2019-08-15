@@ -5,7 +5,7 @@
 #include <nav_msgs/Odometry.h>
 #include <pcl_ros/point_cloud.h>
 #include <sensor_msgs/Imu.h>
-#include <unordered_set>
+#include <unordered_map>
 
 #include <g2o/core/block_solver.h>
 #include <g2o/core/sparse_optimizer.h>
@@ -36,6 +36,9 @@ private:
 
   g2o::VertexRobotState* addVertex(const g2o::RobotState& state);
   void addLandmarkEdges(const std::vector<Landmark>& landmarks);
+  void addLandmarkEdge(int vertex_id, const Landmark& landmark);
+  int addLandmarkVertex(const Landmark& landmark);
+  void updateLandmarkLocations();
 
   void addIMUEdge(const sensor_msgs::Imu& msg);
 
@@ -58,11 +61,12 @@ private:
   Mapper mapper_{};
   geometry_msgs::PoseStamped pose_stamped_{};
 
-  std::unordered_set<int> landmarks_set_{};
+  std::unordered_map<int, int> landmark_map_{};
   g2o::SparseOptimizer optimizer_;
   ros::Time starting_time_{};
 
-  int last_vertex_ = 0;
+  int latest_pose_vertex_id_ = 0;
+  int latest_vertex_id_ = 0;
 };
 
 #endif  // SRC_SLAM_NODE_H

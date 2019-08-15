@@ -18,9 +18,9 @@ lidar_options: &lidar_options
 
 obstacles: &obstacles
   - type: barrel
-    center: [0.2, 0.5]
+    center: [-3.2, 0.5]
   - type: barrel
-    center: [0.0, 1.5]
+    center: [-5.0, 1.5]
   - type: barrel
     center: [1.0, -2.5]
   - type: barrel

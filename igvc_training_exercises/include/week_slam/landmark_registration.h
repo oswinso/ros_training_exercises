@@ -25,6 +25,7 @@ class LandmarkRegistration
   LandmarkRegistration(const Options& options, const BarrelRansac::Options& barrel_ransac_options);
   std::vector<Landmark> getLandmarks(const pcl::PointCloud<pcl::PointXYZ>& scan, const tf::Transform& transform_to_odom);
   std::vector<Landmark> landmarks_;
+  void updateLandmark(int id, const Eigen::Vector2d& location);
  private:
   int findClosestLandmark(const Barrel& barrel) const;
   int registerLandmark(const Barrel& barrel);

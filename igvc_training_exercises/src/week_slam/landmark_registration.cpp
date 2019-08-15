@@ -21,7 +21,8 @@ std::vector<Landmark> LandmarkRegistration::getLandmarks(const pcl::PointCloud<p
     {
       closest_index = registerLandmark(transformed_barrel);
     }
-    landmarks.emplace_back(landmarks_[closest_index]);
+    Landmark closest_landmark{closest_index, barrel};
+    landmarks.emplace_back(closest_landmark);
   }
 
   return landmarks;
@@ -55,4 +56,9 @@ int LandmarkRegistration::registerLandmark(const Barrel& barrel)
   Landmark new_landmark{ id, barrel };
   landmarks_.emplace_back(new_landmark);
   return id;
+}
+
+void LandmarkRegistration::updateLandmark(int id, const Eigen::Vector2d& location)
+{
+  landmarks_.at(id).barrel.head<2>() = location;
 }

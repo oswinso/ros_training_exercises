@@ -1,5 +1,6 @@
 #include <Eigen/StdVector>
 
+#include <week_slam/g2o/edge/edge_point_on_circle.h>
 #include <week_slam/barrel_ransac.h>
 
 void BarrelRansac::test()
@@ -108,7 +109,7 @@ std::vector<Barrel> BarrelRansac::executeSequentially(std::vector<Eigen::Vector2
     //    ROS_INFO_STREAM("Starting loop. scan.size() == " << scan.size());
     auto result = executeOnce(scan);
 
-    ROS_INFO_STREAM("result.error: " << result.error);
+//    ROS_INFO_STREAM("result.error: " << result.error);
     if (result.error > options_.max_error)
     {
       ROS_INFO_STREAM("Breaking due to error");
@@ -181,7 +182,7 @@ BarrelRansac::RANSACResult BarrelRansac::executeOnce(const std::vector<Eigen::Ve
   }
 
   //  ROS_INFO_STREAM("done with <fn executeOnce>");
-  ROS_INFO_STREAM("Scan size: " << scan.size() << ", inliers: " << scan.size() - best_outliers.size());
+//  ROS_INFO_STREAM("Scan size: " << scan.size() << ", inliers: " << scan.size() - best_outliers.size());
   return { best_barrel, std::move(best_outliers), best_err };
 }
 

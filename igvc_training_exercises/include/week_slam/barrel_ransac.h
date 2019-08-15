@@ -10,8 +10,6 @@
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 
-#include <week_slam/g2o/edge_point_on_circle.h>
-
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2d)
 using Barrel = Eigen::Vector3d;
 

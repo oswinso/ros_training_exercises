@@ -1,4 +1,4 @@
-#include <week_slam/g2o/vertex_circle.h>
+#include <week_slam/g2o/vertex/vertex_circle.h>
 
 bool VertexCircle::read(std::istream&)
 {

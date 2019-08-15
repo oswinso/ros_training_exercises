@@ -34,6 +34,14 @@ IF(UNIX)
     NAMES g2o_stuff
     PATHS /usr/local /usr
     PATH_SUFFIXES lib)
+  FIND_LIBRARY(G2O_TYPES_SLAM2D_LIB
+    NAMES g2o_types_slam2d
+    PATHS /usr/local /usr
+    PATH_SUFFIXES lib)
+  FIND_LIBRARY(G2O_TYPES_SLAM2D_ADDONS_LIB
+    NAMES g2o_types_slam2d_addons
+    PATHS /usr/local /usr
+    PATH_SUFFIXES lib)
   FIND_LIBRARY(G2O_TYPES_SLAM3D_LIB
     NAMES g2o_types_slam3d
     PATHS /usr/local /usr
@@ -62,6 +70,8 @@ IF(UNIX)
   SET(G2O_LIBRARIES ${G2O_CSPARSE_EXTENSION_LIB}
     ${G2O_CORE_LIB}
     ${G2O_STUFF_LIB}
+    ${G2O_TYPES_SLAM2D_LIB}
+    ${G2O_TYPES_SLAM2D_ADDONS_LIB}
     ${G2O_TYPES_SLAM3D_LIB}
     ${G2O_SOLVER_CHOLMOD_LIB}
     ${G2O_SOLVER_PCG_LIB}

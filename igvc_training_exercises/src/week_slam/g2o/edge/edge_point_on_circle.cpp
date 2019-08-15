@@ -1,4 +1,4 @@
-#include <week_slam/g2o/edge_point_on_circle.h>
+#include <week_slam/g2o/edge/edge_point_on_circle.h>
 
 bool EdgePointOnCircle::read(std::istream& is)
 {

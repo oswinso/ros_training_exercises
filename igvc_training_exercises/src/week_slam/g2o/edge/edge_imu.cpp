@@ -1,23 +1,31 @@
+#include <g2o/types/slam2d/vertex_se2.h>
+
 #include <week_slam/g2o/edge/edge_imu.h>
+#include <week_slam/g2o/vertex/vertex_twist.h>
+#include <week_slam/g2o/vertex/vertex_timestamp.h>
 
 namespace g2o
 {
+EdgeIMU::EdgeIMU() : BaseMultiEdge<2, IMUMeasurement>()
+{
+  resize(4);
+}
+
 void EdgeIMU::computeError()
 {
-  const auto *v1 = static_cast<const VertexRobotState *>(_vertices[0]);
-  const auto *v2 = static_cast<const VertexRobotState *>(_vertices[1]);
+  // TODO(Oswin): Remove time information from IMU measurement
+  const auto *from_twist = static_cast<const VertexTwist *>(_vertices[0]);
+  const auto *from_stamp = static_cast<const VertexTimestamp *>(_vertices[1]);
+  const auto *to_twist = static_cast<const VertexTwist *>(_vertices[2]);
+  const auto *to_stamp = static_cast<const VertexTimestamp *>(_vertices[3]);
 
-  const auto& v1_twist = v1->estimate().twist();
-  const auto& v2_twist = v2->estimate().twist();
-
-  _error(0) = (v2_twist.linear() - v1_twist.linear()) - delta_v_;
-  _error(1) = (v1_twist.angular() + v2_twist.angular()) / 2 - _measurement.angular_velocity();
+  _error(0) = (to_twist->estimate().linear() - from_twist->estimate().linear()) - delta_v_;
+  _error(1) = (from_twist->estimate().angular() + to_twist->estimate().angular()) / 2 - _measurement.angular_velocity();
 }
 
 void EdgeIMU::setMeasurement(const IMUMeasurement &m)
 {
   _measurement = m;
-  delta_v_ = m.delta_v();
 }
 
 bool EdgeIMU::read(std::istream &is)
@@ -25,7 +33,6 @@ bool EdgeIMU::read(std::istream &is)
   Eigen::Vector3d p;
   is >> p[0] >> p[1] >> p[2];
   _measurement.fromVector(p);
-  delta_v_ = measurement().delta_v();
 
   for (int i = 0; i < 3; i++)
   {

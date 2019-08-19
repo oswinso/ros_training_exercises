@@ -57,7 +57,7 @@ set(buzzsim_SRCS
   src/buzzsim/sensors/lidar.cpp
   src/buzzsim/sensors/print_utils.cpp
   src/buzzsim/sensors/lidar_painter.cpp
-  )
+  ../igvc_training_exercises/include/week_slam/g2o/vertex/vertex_twist.h)
 set(buzzsim_HDRS
   include/buzzsim/app.h
   include/buzzsim/frame.h

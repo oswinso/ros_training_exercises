@@ -1,8 +1,6 @@
 #ifndef SRC_IMUMEASUREMENT_H
 #define SRC_IMUMEASUREMENT_H
 
-#include <week_slam/g2o/g2o_robot_state.h>
-
 namespace g2o
 {
 class IMUMeasurement

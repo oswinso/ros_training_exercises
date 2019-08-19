@@ -11,11 +11,11 @@ if (SUITESPARSE_FOUND AND G2O_FOUND)
     slam_node.cpp
     barrel_ransac.cpp
     g2o/vertex/vertex_circle.cpp
-    g2o/vertex/vertex_robot_state.cpp
+    g2o/vertex/vertex_twist.cpp
     g2o/edge/edge_point_on_circle.cpp
     g2o/edge/edge_imu.cpp
     g2o/edge/edge_landmark.cpp
-    slam_node_params.cpp)
+    slam_node_params.cpp g2o/vertex/vertex_twist.cpp g2o/edge/edge_holonomic.cpp)
   target_include_directories(week_slam PRIVATE ${catkin_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${G2O_INCLUDE_DIRS})
   target_link_libraries(week_slam ${catkin_LIBRARIES} Eigen3::Eigen ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES})
   add_dependencies(week_slam ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

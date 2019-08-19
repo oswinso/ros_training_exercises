@@ -4,10 +4,10 @@ namespace g2o
 {
 void EdgeLandmark::computeError()
 {
-  const auto *pose = static_cast<const VertexRobotState *>(_vertices[0]);
+  const auto *pose = static_cast<const VertexSE2 *>(_vertices[0]);
   const auto *landmark_position = static_cast<const VertexPointXY *>(_vertices[1]);
 
-  _error = _measurement - (pose->estimate().se2().inverse() * landmark_position->estimate());
+  _error = _measurement - (pose->estimate().inverse() * landmark_position->estimate());
 }
 
 bool EdgeLandmark::read(std::istream &is)

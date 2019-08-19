@@ -11,7 +11,7 @@
 #include <g2o/core/sparse_optimizer.h>
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 
-#include <week_slam/g2o/vertex/vertex_robot_state.h>
+#include <week_slam/g2o/state_vertices.h>
 #include <week_slam/landmark_registration.h>
 #include <week_slam/mapper.h>
 #include <week_slam/slam_node.h>
@@ -34,7 +34,7 @@ private:
   void lidarCallback(const pcl::PointCloud<pcl::PointXYZ>& msg);
   void publishLandmarks(const std::vector<Landmark>& landmarks);
 
-  g2o::VertexRobotState* addVertex(const g2o::RobotState& state);
+  void addVertex(const g2o::StateVertices& new_vertices);
   void addLandmarkEdges(const std::vector<Landmark>& landmarks);
   void addLandmarkEdge(int vertex_id, const Landmark& landmark);
   int addLandmarkVertex(const Landmark& landmark);

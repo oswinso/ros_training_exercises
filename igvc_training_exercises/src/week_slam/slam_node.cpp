@@ -1,5 +1,6 @@
 #include <g2o/core/optimization_algorithm_gauss_newton.h>
 
+#include <week_slam/g2o/state_vertices.h>
 #include <week_slam/g2o/edge/edge_landmark.h>
 #include <week_slam/g2o/edge/edge_imu.h>
 #include <week_slam/g2o/edge/edge_holonomic.h>
@@ -44,12 +45,15 @@ void SlamNode::setupG2o()
 void SlamNode::setupGraph()
 {
   starting_time_ = ros::Time::now();
-  g2o::RobotState starting_state{};
-  auto* starting_pose = new g2o::VertexRobotState();
-  starting_pose->setId(0);
-  starting_pose->setEstimate(starting_state);
-  starting_pose->setFixed(true);
-  optimizer_.addVertex(starting_pose);
+  g2o::StateVertices starting_state{};
+  starting_state.allocate();
+  starting_state.setIdsFrom(0);
+
+  starting_state.se2->setFixed(true);
+  starting_state.twist->setFixed(true);
+  starting_state.stamp->setFixed(true);
+
+  starting_state.insertIntoGraph(optimizer_);
 }
 
 void SlamNode::poseCallback(const geometry_msgs::PoseStamped& msg)
@@ -64,6 +68,15 @@ void SlamNode::imuCallback(const sensor_msgs::Imu& msg)
   publishLatestPose();
 }
 
+// Hierarchical slam: Start with level 1
+// When current node is some x distance away from last node, then take all new vertices (vector or something)
+// and take like the middle node, insert it as a new vertex into the lower graph
+// Take the last inserted vertex into the lower graph, calculate a relative transform from that to this,
+// Unary edge for the twist.
+//
+// To do:
+// 1: split up robotstate into SE2 and twist
+
 void SlamNode::optimizeGraph()
 {
   optimizer_.initializeOptimization();
@@ -75,62 +88,61 @@ void SlamNode::addIMUEdge(const sensor_msgs::Imu& msg)
   static ros::Time last_time = msg.header.stamp;
   static int last_id = -1;
 
-  g2o::VertexRobotState* last_imu_vertex = nullptr;
+  g2o::StateVertices last_imu_vertex;
+
   // Create first node
   if (last_id == -1)
   {
-    ROS_INFO_STREAM("last_id == -1. Adding vertex with id " << latest_pose_vertex_id_);
-    last_imu_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(latest_pose_vertex_id_));
+    ROS_INFO_STREAM("last_id == -1. Adding vertices with id starting from " << latest_pose_vertex_id_);
+    last_imu_vertex = g2o::StateVertices(latest_pose_vertex_id_, optimizer_);
   }
   else
   {
-    ROS_INFO_STREAM("last_id == " << last_id << ". Adding vertex with id " << last_id);
-    last_imu_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(last_id));
+    ROS_INFO_STREAM("last_id == " << last_id << ". Adding vertices with id starting from " << last_id);
+    last_imu_vertex = g2o::StateVertices(last_id, optimizer_);
   }
 
-  double new_node_delta_t = (msg.header.stamp - starting_time_).toSec();
-  double last_imu_delta_t = last_imu_vertex->estimate().delta_t();
-  double delta_t = new_node_delta_t - last_imu_delta_t;
+  double delta_t = (msg.header.stamp - last_imu_vertex.stamp->estimate()).toSec();
+  auto last_twist = last_imu_vertex.twist->estimate();
+  auto last_se2 = last_imu_vertex.se2->estimate();
 
-  g2o::RobotState copy{ last_imu_vertex->estimate() };
-  copy = copy.withTwist(copy.twist(), delta_t);
-  auto* new_vertex = addVertex(copy);
-  last_id = new_vertex->id();
+  g2o::StateVertices new_state_vertex;
+  new_state_vertex.allocate();
+  new_state_vertex.stamp->setEstimate(msg.header.stamp);
+  new_state_vertex.twist->setEstimate(last_twist);
+  new_state_vertex.se2->setEstimate(last_twist.apply(last_se2, delta_t));
+
+  addVertex(new_state_vertex);
+  last_id += 3;
 
   auto imu_edge = new g2o::EdgeIMU();
   g2o::IMUMeasurement measurement{ msg.linear_acceleration.x, msg.angular_velocity.z, delta_t };
   imu_edge->setMeasurement(measurement);
   imu_edge->setInformation(Eigen::Matrix<double, 2, 2>::Identity());
-  imu_edge->setVertex(0, last_imu_vertex);
-  imu_edge->setVertex(1, new_vertex);
+
+  last_imu_vertex.connectIMUEdge(new_state_vertex, *imu_edge);
 
   optimizer_.addEdge(imu_edge);
 }
 
-g2o::VertexRobotState* SlamNode::addVertex(const g2o::RobotState& state)
+void SlamNode::addVertex(const g2o::StateVertices& new_vertices)
 {
-  auto new_vertex = new g2o::VertexRobotState();
-
-  int old_vertex_id = latest_pose_vertex_id_;
+  int old_vertices_id = latest_pose_vertex_id_;
   int new_vertex_id = latest_vertex_id_ + 1;
 
-  new_vertex->setId(new_vertex_id);
-  new_vertex->setEstimate(state);
+  new_vertices.setIdsFrom(new_vertex_id);
+  new_vertices.insertIntoGraph(optimizer_);
 
-  optimizer_.addVertex(new_vertex);
+  g2o::StateVertices last_vertices(old_vertices_id, optimizer_);
 
-  auto last_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(old_vertex_id));
   auto holonomic_constraint = new g2o::EdgeHolonomic();
   holonomic_constraint->setInformation(Eigen::Matrix<double, 3, 3>::Identity());
 
-  holonomic_constraint->setVertex(0, last_vertex);
-  holonomic_constraint->setVertex(1, new_vertex);
+  last_vertices.connectHolonomicEdge(new_vertices, *holonomic_constraint);
   optimizer_.addEdge(holonomic_constraint);
 
-  latest_vertex_id_++;
-  latest_pose_vertex_id_ = latest_vertex_id_;
-
-  return new_vertex;
+  latest_vertex_id_+=3;
+  latest_pose_vertex_id_ = latest_vertex_id_ + 1;
 }
 
 void SlamNode::lidarCallback(const pcl::PointCloud<pcl::PointXYZ>& msg)
@@ -207,13 +219,13 @@ int SlamNode::addLandmarkVertex(const Landmark& landmark)
 
 void SlamNode::addLandmarkEdge(int vertex_id, const Landmark& landmark)
 {
-  auto pose_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(latest_pose_vertex_id_));
+  g2o::StateVertices last_vertices(latest_pose_vertex_id_, optimizer_);
   auto landmark_vertex = static_cast<g2o::VertexPointXY*>(optimizer_.vertex(vertex_id));
   // TODO(Oswin): Properly find the vertex
 
   auto* landmark_edge = new g2o::EdgeLandmark();
   landmark_edge->setMeasurement(landmark.barrel.head<2>());
-  landmark_edge->setVertex(0, pose_vertex);
+  landmark_edge->setVertex(0, last_vertices.se2);
   landmark_edge->setVertex(1, landmark_vertex);
   landmark_edge->setInformation(Eigen::Matrix<double, 2, 2>::Identity());
 
@@ -236,15 +248,19 @@ void SlamNode::publishLandmarks(const std::vector<Landmark>& landmarks)
 
 void SlamNode::publishLatestPose()
 {
-  auto& robot_state = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(latest_pose_vertex_id_))->estimate();
+  g2o::StateVertices latest_state(latest_pose_vertex_id_, optimizer_);
+
+  auto& se2 = latest_state.se2->estimate();
+  auto& twist = latest_state.twist->estimate();
+  auto& stamp = latest_state.stamp->estimate();
 
   nav_msgs::Odometry odometry;
-  odometry.pose.pose.orientation = tf::createQuaternionMsgFromYaw(robot_state.se2().rotation().angle());
-  odometry.pose.pose.position.x = robot_state.se2().translation()(0);
-  odometry.pose.pose.position.y = robot_state.se2().translation()(1);
-  odometry.twist.twist.linear.x = robot_state.twist().linear();
-  odometry.twist.twist.angular.z = robot_state.twist().angular();
-  odometry.header.stamp = ros::Time(robot_state.delta_t());
+  odometry.pose.pose.orientation = tf::createQuaternionMsgFromYaw(se2.rotation().angle());
+  odometry.pose.pose.position.x = se2.translation()(0);
+  odometry.pose.pose.position.y = se2.translation()(1);
+  odometry.twist.twist.linear.x = twist.linear();
+  odometry.twist.twist.angular.z = twist.angular();
+  odometry.header.stamp = stamp;
   odometry.header.frame_id = "odom";
 
   odom_pub_.publish(odometry);

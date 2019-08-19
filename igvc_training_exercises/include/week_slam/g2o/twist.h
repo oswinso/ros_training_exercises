@@ -84,6 +84,12 @@ public:
     return { delta_x, delta_y, delta_theta };
   }
 
+  [[nodiscard]] SE2 apply(const SE2& starting_pose, double delta_t) const
+  {
+    SE2 transform = toSE2(delta_t);
+    return starting_pose * transform;
+  }
+
 private:
   double linear_;
   double angular_;

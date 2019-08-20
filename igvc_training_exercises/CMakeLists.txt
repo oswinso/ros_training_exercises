@@ -32,4 +32,5 @@ add_subdirectory(src/week4)
 add_subdirectory(src/week5)
 add_subdirectory(src/week6)
 
+add_subdirectory(src/week_scanmatching)
 add_subdirectory(src/week_slam)

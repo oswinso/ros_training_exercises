@@ -1,8 +1,8 @@
 #include <Eigen/StdVector>
 
-#include <Eigen/src/Eigenvalues/EigenSolver.h>
 #include <pcl/kdtree/kdtree_flann.h>
 #include <week_scanmatching/icp/icp.h>
+#include <Eigen/Core>
 
 namespace scanmatcher
 {
@@ -14,8 +14,9 @@ Result ICP::scanmatch(const pcl::PointCloud<pcl::PointXYZ>& input, const pcl::Po
   double error = std::numeric_limits<double>::infinity();
 
   // TODO(Oswin) Parametrize this
-  int max_iterations = 10;
+  int max_iterations = 500;
   double threshold = 1e-5;
+  double correspondance_outlier_threshold = 0.5;
 
   int num_input = input.points.size();
 
@@ -36,6 +37,7 @@ Result ICP::scanmatch(const pcl::PointCloud<pcl::PointXYZ>& input, const pcl::Po
   for (int i = 0; i < max_iterations; i++)
   {
     // TODO(Oswin) Make this a KD tree
+    std::vector<int> inlier_indices{};
     for (int j = 0; j < num_input; j++)
     {
       pcl::PointXYZ pcl_point;
@@ -45,10 +47,30 @@ Result ICP::scanmatch(const pcl::PointCloud<pcl::PointXYZ>& input, const pcl::Po
       kdtree.nearestKSearch(pcl_point, 1, closest_idx, distance);
       auto closest_point = target[closest_idx.front()];
       target_corresp.col(j) = closest_point.getVector3fMap().cast<double>();
+
+      if (std::sqrt(distance.front()) < correspondance_outlier_threshold)
+      {
+        inlier_indices.emplace_back(j);
+      }
     }
 
-    Eigen::VectorXd weights = Eigen::VectorXd::Ones(num_input);
-    Eigen::Isometry3d transform = getRigidTransform(weights, aligned_input, target_corresp);
+    int num_inliers = inlier_indices.size();
+    if (num_inliers < 4)
+    {
+      return { Eigen::Affine3d::Identity(), std::numeric_limits<double>::infinity() };
+    }
+    Eigen::Matrix3Xd inlier_input(3, num_inliers);
+    Eigen::Matrix3Xd inlier_corresp(3, num_inliers);
+
+    for (int idx = 0; idx < num_inliers; idx++)
+    {
+      int inlier_index = inlier_indices[idx];
+      inlier_input.col(idx) = aligned_input.col(inlier_index);
+      inlier_corresp.col(idx) = target_corresp.col(inlier_index);
+    }
+
+    Eigen::VectorXd weights = Eigen::VectorXd::Ones(num_inliers);
+    Eigen::Isometry3d transform = getRigidTransform(weights, inlier_input, inlier_corresp);
     total_transform = transform * total_transform;
 
     error = 0.0;
@@ -58,8 +80,6 @@ Result ICP::scanmatch(const pcl::PointCloud<pcl::PointXYZ>& input, const pcl::Po
       error += (target_corresp.col(j) - aligned_input.col(j)).squaredNorm();
     }
     error /= num_input;
-
-    std::cout << "Error: " << error << std::endl;
 
     if (error < threshold)
     {
@@ -99,7 +119,6 @@ Eigen::Isometry3d ICP::getRigidTransform(const Eigen::VectorXd& weights, const E
     rotation_matrix = altered_v * svd.matrixU().transpose();
   }
 
-  std::cout << "Rotation:\n" << rotation_matrix.transpose() << std::endl;
   Eigen::Isometry3d transform{ rotation_matrix.transpose() };
   transform.translation() = target_centroid - rotation_matrix * input_centroid;
 

@@ -11,6 +11,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
+  tf_conversions
   std_msgs
   igvc_buzzsim)
 
@@ -21,6 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(CATKIN_DEPENDS
   roscpp
   tf
+  tf_conversions
   std_msgs
   igvc_buzzsim)
 
@@ -32,4 +34,5 @@ add_subdirectory(src/week4)
 add_subdirectory(src/week5)
 add_subdirectory(src/week6)
 
+add_subdirectory(src/week_scanmatching)
 add_subdirectory(src/week_slam)

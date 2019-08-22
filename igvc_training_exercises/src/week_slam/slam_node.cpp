@@ -1,8 +1,9 @@
 #include <g2o/core/optimization_algorithm_gauss_newton.h>
 
-#include <week_slam/g2o/edge/edge_landmark.h>
-#include <week_slam/g2o/edge/edge_imu.h>
+#include <pcl/kdtree/kdtree_flann.h>
 #include <week_slam/g2o/edge/edge_holonomic.h>
+#include <week_slam/g2o/edge/edge_imu.h>
+#include <week_slam/g2o/edge/edge_landmark.h>
 #include <week_slam/slam_node.h>
 
 #include <ros/ros.h>
@@ -20,6 +21,7 @@ SlamNode::SlamNode()
 
   odom_pub_ = nh_.advertise<nav_msgs::Odometry>("oswin/odometry", 1);
   map_pub_ = nh_.advertise<nav_msgs::OccupancyGrid>("oswin/map", 1);
+  visible_landmark_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("oswin/visible_landmarks", 1);
   landmark_pub_ = nh_.advertise<pcl::PointCloud<pcl::PointXYZ>>("oswin/landmarks", 1);
 
   mapper_.setInfo(200, 200, 0.1);
@@ -61,13 +63,14 @@ void SlamNode::imuCallback(const sensor_msgs::Imu& msg)
 {
   addIMUEdge(msg);
   optimizeGraph();
-  publishLatestPose();
 }
 
 void SlamNode::optimizeGraph()
 {
   optimizer_.initializeOptimization();
   optimizer_.optimize(50);
+  publishLatestPose();
+  updateLandmarkLocations();
 }
 
 void SlamNode::addIMUEdge(const sensor_msgs::Imu& msg)
@@ -79,12 +82,12 @@ void SlamNode::addIMUEdge(const sensor_msgs::Imu& msg)
   // Create first node
   if (last_id == -1)
   {
-    ROS_INFO_STREAM("last_id == -1. Adding vertex with id " << latest_pose_vertex_id_);
+    //    ROS_INFO_STREAM("last_id == -1. Adding vertex with id " << latest_pose_vertex_id_);
     last_imu_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(latest_pose_vertex_id_));
   }
   else
   {
-    ROS_INFO_STREAM("last_id == " << last_id << ". Adding vertex with id " << last_id);
+    //    ROS_INFO_STREAM("last_id == " << last_id << ". Adding vertex with id " << last_id);
     last_imu_vertex = static_cast<g2o::VertexRobotState*>(optimizer_.vertex(last_id));
   }
 
@@ -162,11 +165,38 @@ void SlamNode::lidarCallback(const pcl::PointCloud<pcl::PointXYZ>& msg)
 
   addLandmarkEdges(landmarks);
   optimizeGraph();
-  updateLandmarkLocations();
 }
 
 void SlamNode::updateLandmarkLocations()
 {
+  pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr landmark_pc(new pcl::PointCloud<pcl::PointXYZ>);
+
+  constexpr double same_landmark_radius = 0.5;
+
+  for (const auto [landmark_id, vertex_id] : landmark_map_)
+  {
+    auto landmark_vertex = static_cast<g2o::VertexPointXY*>(optimizer_.vertex(vertex_id));
+    auto x = static_cast<float>(landmark_vertex->estimate()(0));
+    auto y = static_cast<float>(landmark_vertex->estimate()(1));
+
+    pcl::PointXYZ landmark_pcl{ x, y, 0.0 };
+    landmark_pc->points.emplace_back(landmark_pcl);
+    kdtree.setInputCloud(landmark_pc);
+
+    std::vector<int> indices;
+    std::vector<float> squared_distances;
+    kdtree.radiusSearch(landmark_pcl, same_landmark_radius, indices, squared_distances);
+
+    if (!indices.empty())
+    {
+      auto original_landmark = std::min_element(indices.begin(), indices.end());
+      int index = *original_landmark;
+      indices.erase(original_landmark);
+      mergeLandmarks(index, indices);
+    }
+  }
+
   for (const auto [landmark_id, vertex_id] : landmark_map_)
   {
     auto landmark_vertex = static_cast<g2o::VertexPointXY*>(optimizer_.vertex(vertex_id));
@@ -222,16 +252,25 @@ void SlamNode::addLandmarkEdge(int vertex_id, const Landmark& landmark)
 
 void SlamNode::publishLandmarks(const std::vector<Landmark>& landmarks)
 {
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  cloud.header.frame_id = "oswin";
+  pcl::PointCloud<pcl::PointXYZ> visible_landmarks;
+  pcl::PointCloud<pcl::PointXYZ> all_landmarks;
+  visible_landmarks.header.frame_id = "oswin";
+  all_landmarks.header.frame_id = "odom";
 
   for (const auto& landmark : landmarks)
   {
     pcl::PointXYZ point{ static_cast<float>(landmark.barrel(0)), static_cast<float>(landmark.barrel(1)),
                          static_cast<float>(landmark.id) };
-    cloud.points.emplace_back(point);
+    visible_landmarks.points.emplace_back(point);
   }
-  landmark_pub_.publish(cloud);
+  for (const auto& landmark : landmark_registration_.landmarks_)
+  {
+    pcl::PointXYZ point{ static_cast<float>(landmark.barrel(0)), static_cast<float>(landmark.barrel(1)),
+                         static_cast<float>(landmark.id) };
+    all_landmarks.points.emplace_back(point);
+  }
+  landmark_pub_.publish(all_landmarks);
+  visible_landmark_pub_.publish(visible_landmarks);
 }
 
 void SlamNode::publishLatestPose()
@@ -248,4 +287,32 @@ void SlamNode::publishLatestPose()
   odometry.header.frame_id = "odom";
 
   odom_pub_.publish(odometry);
+}
+
+void SlamNode::mergeLandmarks(int original_index, const std::vector<int>& duplicate_indices)
+{
+  auto original_vertex_id = landmark_map_.find(original_index);
+  auto original_vertex = static_cast<g2o::VertexPointXY*>(optimizer_.vertex(original_vertex_id->second));
+
+  for (const int index : duplicate_indices)
+  {
+    ROS_WARN_STREAM("Removing vertex " << index << " as it is a duplicate of " << original_index);
+    if (auto vertex_id = landmark_map_.find(index); vertex_id != landmark_map_.end())
+    {
+      auto duplicate_vertex = static_cast<g2o::VertexPointXY*>(optimizer_.vertex(vertex_id->second));
+
+      std::vector<g2o::EdgeLandmark*> landmark_edges;
+      for (auto* edge : duplicate_vertex->edges())
+      {
+        landmark_edges.emplace_back(static_cast<g2o::EdgeLandmark*>(edge));
+      }
+
+      // TODO(Oswin): Remove duplicate vertices from graph
+
+      for (auto* edge : landmark_edges)
+      {
+        edge->setVertex(1, original_vertex);
+      }
+    }
+  }
 }

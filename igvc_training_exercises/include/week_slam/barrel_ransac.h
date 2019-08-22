@@ -11,6 +11,7 @@
 #include <g2o/solvers/csparse/linear_solver_csparse.h>
 
 EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix2d)
+EIGEN_DEFINE_STL_VECTOR_SPECIALIZATION(Eigen::Matrix3d)
 using Barrel = Eigen::Vector3d;
 
 class BarrelRansac

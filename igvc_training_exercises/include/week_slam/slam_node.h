@@ -39,6 +39,7 @@ private:
   void addLandmarkEdge(int vertex_id, const Landmark& landmark);
   int addLandmarkVertex(const Landmark& landmark);
   void updateLandmarkLocations();
+  void mergeLandmarks(int original_index, const std::vector<int>& duplicate_indices);
 
   void addIMUEdge(const sensor_msgs::Imu& msg);
 
@@ -54,6 +55,7 @@ private:
 
   ros::Publisher odom_pub_;
   ros::Publisher map_pub_;
+  ros::Publisher visible_landmark_pub_;
   ros::Publisher landmark_pub_;
 
   SlamNodeParams params_;

@@ -17,7 +17,7 @@ if (SUITESPARSE_FOUND AND G2O_FOUND)
     g2o/edge/edge_landmark.cpp
     slam_node_params.cpp)
   target_include_directories(week_slam PRIVATE ${catkin_INCLUDE_DIRS} ${SUITESPARSE_INCLUDE_DIRS} ${G2O_INCLUDE_DIRS})
-  target_link_libraries(week_slam ${catkin_LIBRARIES} Eigen3::Eigen ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES})
+  target_link_libraries(week_slam ${catkin_LIBRARIES} Eigen3::Eigen ${SUITESPARSE_LIBRARIES} ${G2O_LIBRARIES} scanmatching)
   add_dependencies(week_slam ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 else()
   message(STATUS "Couldn't find suitesparse and g2o, not compiling week_slam")

@@ -7,6 +7,7 @@
 #include <geometry_msgs/Point.h>
 #include <week_slam/barrel_ransac.h>
 #include <tf/LinearMath/Transform.h>
+#include <week_scanmatching/icp/icp.h>
 
 struct Landmark
 {
@@ -29,9 +30,12 @@ class LandmarkRegistration
  private:
   int findClosestLandmark(const Barrel& barrel) const;
   int registerLandmark(const Barrel& barrel);
+  pcl::PointCloud<pcl::PointXYZ> toPointCloud(const std::vector<Barrel>& barrels) const;
+  pcl::PointCloud<pcl::PointXYZ> toPointCloud(const std::vector<Landmark>& landmarks) const;
 
   Options options_;
   BarrelRansac barrel_ransac_;
+  scanmatcher::ICP icp_;
 };
 
 #endif //SRC_LANDMARK_REGISTRATION_H

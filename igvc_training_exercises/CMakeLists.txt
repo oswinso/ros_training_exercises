@@ -12,6 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   tf
   tf_conversions
+  pcl_ros
+  pcl_conversions
   std_msgs
   igvc_buzzsim)
 
@@ -23,8 +25,12 @@ catkin_package(CATKIN_DEPENDS
   roscpp
   tf
   tf_conversions
+  pcl_ros
+  pcl_conversions
   std_msgs
-  igvc_buzzsim)
+  igvc_buzzsim
+  LIBRARIES scanmatching
+  )
 
 include_directories(include)
 

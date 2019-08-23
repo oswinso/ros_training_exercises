@@ -161,3 +161,8 @@ publishing.
 
 Try moving the robot again using `teleop_twist_keyboard`. You should notice both the turtle in the simulator and the
 red arrow moving, and hopefully the red arrows will be in the same location as the turtle in the simulator.
+
+<!-- TODO: tf::TransformBroadcaster -->
+
+And that's it for this week. [Next week](week5.md), we'll look at **mapping** the environment around the robot 
+using a **lidar** with occupancy grid maps.

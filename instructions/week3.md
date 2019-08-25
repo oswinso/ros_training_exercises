@@ -18,11 +18,10 @@ We call the thing that determines how much throttle to give the *controller*, wh
 *process variable (PV)* to equal the *set point (SP)* by changing the *control*. In the car example, the *PV* would be the car's position, and the
 *SP* would be the position that's just in front of the stop sign, and the *control* is the throttle of the car.
 
-### The PID algorithm
+### The PID algorithm - Proportional Controller
 PID is one example of such a *controller* that is very simple but also very effective. We can understand this algorithm
 in the context of the car example earlier:
 
-#### Proportional Controller
 Let's say there is some *error*, meaning that your car was some distance away from the stop sign. You would step on
 the throttle to move your car forward. If there's a larger error, then you would step on the throttle more than then
 if there was a smaller error. And finally, if there's no error, then you wouldn't step on the throttle at all.
@@ -35,66 +34,9 @@ What we've just described is a *proportional controller*, because the *control* 
     title="P_\text{out} = K_\text{p} e(t)" />
 </p>
 
-#### Integral Controller
-However, there's a problem. Let's say that instead of trying to move the car to just in front of the stop sign, we're
-trying to catch up to a car that's driving away from us. If we start off with some error such that
-<img src="https://latex.codecogs.com/svg.latex?\inline&space;K_p&space;\,&space;e(t)" title="K_p \, e(t)" />
-is equal to the target car's velocity, then our car is going to be going at the same velocity as the target car, and
-the error isn't going to decrease.
 
-Intuitively though, if you were trying to catch up to a car and you saw that the error was still present after a while,
-you would begin to step harder on the throttle. The longer you see that the error is present, the harder you step on the
-throttle.
-
-One way to describe this behavior would be to say that we have a component of our control that is proportional
-to the *integral* of the error: As the error stays present for longer, we're going to increase our control effort.
-
-This is an *integral controller*, where the *control* is proportional to the __integral__ of the *error*.
-
-<p align="center">
-    <img
-    src="https://latex.codecogs.com/svg.latex?I_\text{out}&space;=&space;K_\text{i}&space;\,&space;\int_0^t&space;e(\tau)&space;\,d\tau"
-    title="I_\text{out} = K_\text{i} \, \int_0^t e(\tau) \,d\tau" />
-</p>
-
-#### Derivative Controller
-And finally, imagine we're back in the first scenario where we're trying to stop right in from the stop sign. If we were
-only using our *proportional controller*, even when we're just about to get to the stop sign, we would still have our
-foot on the throttle, even if it was a small amount. This would result in the car overshooting the stop sign, and then
-our *proportional controller* would tell us to reverse, and the same thing would happen until eventually getting to the
-stop sign.
-
-However, this isn't something that you would do in real life. Assume that we're driving a really heavy truck. You might
-step on the throttle at the beginning to get the truck moving, but as the truck is moving faster, you would use the
-throttle less to stop yourself from overshooting. The faster you happen to be moving, the more you would ease off of the
-throttle, or even use the brakes to slow yourself down a bit.
-
-To describe this behavior we can say that there's a component of our control that is proportional to the *derivative* of
-the error, so that the faster the error is decreasing, the more we ease off on our *control*.
-
-This is a *derivative controller*, where the *control* is proportional to the __derivative__ of the *error*.
-
-<p align="center">
-    <img
-    src="https://latex.codecogs.com/svg.latex?D_\text{out}&space;=&space;K_\text{d}&space;\,&space;\frac{d\,&space;e(t)}{dt}"
-    title="D_\text{out} = K_\text{d} \, \frac{d\, e(t)}{dt}" />
-</p>
-
-#### Putting it all together
-The PID controller is just the three controllers above combined, and stands for (as you've probably guessed)
-*Proportional, Integral, Derivative*.
-
-And by putting the three equations for control output above, we get:
-
-<p align="center">
-    <img src="https://latex.codecogs.com/svg.latex?u(t)&space;=&space;K_\text{p}&space;\,&space;e(t)&space;&plus;&space;K_\text{i}&space;\,&space;\int_0^t&space;e(\tau)&space;\,d\tau&space;&plus;&space;K_\text{d}&space;\,&space;\frac{d\,&space;e(t)}{dt}"
-    title="u(t) = K_\text{p} \, e(t) + K_\text{i} \, \int_0^t e(\tau) \,d\tau + K_\text{d} \, \frac{d\, e(t)}{dt}" />
-</p>
-
-where *u* stands for the *control output*.
-
-### Exercise: Implementing a PID controller in ROS
-Let's take the PID controller that we've just learnt, and implement it in ROS. We'll be using the `buzzsim` simulator
+### Exercise: Implementing a Proportional controller in ROS
+Let's take the proportional controller that we've just learnt, and implement it in ROS. We'll be using the `buzzsim` simulator
 that we installed at the beginning to showcase this.
 
 #### Launching buzzsim with `roslaunch`
@@ -250,7 +192,43 @@ You should see a graph like below:
 
 Try playing with `kp` again, and verify that the graph shows what you see happening in the simulator.
 
-#### A moving target, and implementing an integral controller
+### The PID Algorithm - Integral Controller
+However, there's a problem. Let's say that instead of trying to move the car to just in front of the stop sign, we're
+trying to catch up to a car that's driving away from us. If we start off with some error such that
+<img src="https://latex.codecogs.com/svg.latex?\inline&space;K_p&space;\,&space;e(t)" title="K_p \, e(t)" />
+is equal to the target car's velocity, then our car is going to be going at the same velocity as the target car, and
+the error isn't going to decrease.
+
+Intuitively though, if you were trying to catch up to a car and you saw that the error was still present after a while,
+you would begin to step harder on the throttle. The longer you see that the error is present, the harder you step on the
+throttle.
+
+One way to describe this behavior would be to say that we have a component of our control that is proportional
+to the *integral* of the error: As the error stays present for longer, we're going to increase our control effort.
+
+This is an *integral controller*, where the *control* is proportional to the __integral__ of the *error*.
+
+<p align="center">
+    <img
+    src="https://latex.codecogs.com/svg.latex?I_\text{out}&space;=&space;K_\text{i}&space;\,&space;\int_0^t&space;e(\tau)&space;\,d\tau"
+    title="I_\text{out} = K_\text{i} \, \int_0^t e(\tau) \,d\tau" />
+</p>
+
+It's easier to think of this in terms of **discrete** time, where time happens in small steps, as this is how a computer
+works. Instead of computing an integral, we compute a sum of the error and multiply it by the time step between each
+interval:
+
+<p align="center">
+    <img src="https://latex.codecogs.com/svg.latex?I_\text{out}&space;=&space;K_\text{i}&space;\,&space;\sum_{\tau=0}^{t}&space;e(\tau)&space;\,\Delta&space;t" title="I_\text{out} = K_\text{i} \, \sum_{\tau=0}^{t} e(\tau) \,\Delta t" />
+</p>
+
+or calculating recursively
+
+<p align="center">
+    <img src="https://latex.codecogs.com/svg.latex?\begin{align*}&space;I_\text{out}&space;=&&space;K_\text{i}&space;\cdot&space;\;&space;\textrm{accumulator}_t&space;\\&space;\textrm{accumulator}_t&space;=&&space;\;&space;\textrm{accumulator}_{t-1}&space;&plus;&space;e(t)&space;\;&space;\Delta&space;t&space;\end{align*}" title="\begin{align*} I_\text{out} =& K_\text{i} \cdot \; \textrm{accumulator}_t \\ \textrm{accumulator}_t =& \; \textrm{accumulator}_{t-1} + e(t) \; \Delta t \end{align*}" />
+</p>
+
+### Exercise: A moving target, and implementing an integral controller
 Let's try a moving target this time. Do this by using Ctrl-/ and commenting the `<param name="world_name" value="stationary" />` line
 and uncommenting the line below in the [week3.launch](../igvc_training_exercises/launch/week3.launch) file.
 
@@ -272,8 +250,8 @@ It should look like this:
 Now if you `roslaunch` again, you should see the top turtle start to move. Does your proportional controller work?
 Verify what you're seeing by checking `rqt_plot`.
 
-The error that you're seeing is called **steady state error**. As we explained earlier, the integral controller part of
-PID helps to solve this.
+The error that you're seeing is called **steady state error**. As we explained earlier, the integral controller helps
+to solve this.
 <details>
   <summary>Implement an integral controller</summary>
   
@@ -290,8 +268,50 @@ PID helps to solve this.
   You should be able to eliminate the steady state error now.
 </details>
 
+### The PID Algorithm - Derivative Controller
+And finally, imagine we're back in the first scenario where we're trying to stop right in from the stop sign. If we were
+only using our *proportional controller*, even when we're just about to get to the stop sign, we would still have our
+foot on the throttle, even if it was a small amount. This would result in the car overshooting the stop sign, and then
+our *proportional controller* would tell us to reverse, and the same thing would happen until eventually getting to the
+stop sign.
+
+However, this isn't something that you would do in real life. Assume that we're driving a really heavy truck. You might
+step on the throttle at the beginning to get the truck moving, but as the truck is moving faster, you would use the
+throttle less to stop yourself from overshooting. The faster you happen to be moving, the more you would ease off of the
+throttle, or even use the brakes to slow yourself down a bit.
+
+To describe this behavior we can say that there's a component of our control that is proportional to the *derivative* of
+the error, so that the faster the error is decreasing, the more we ease off on our *control*.
+
+This is a *derivative controller*, where the *control* is proportional to the __derivative__ of the *error*.
+
+<p align="center">
+    <img
+    src="https://latex.codecogs.com/svg.latex?D_\text{out}&space;=&space;K_\text{d}&space;\,&space;\frac{d\,&space;e(t)}{dt}"
+    title="D_\text{out} = K_\text{d} \, \frac{d\, e(t)}{dt}" />
+</p>
+
+For the **continuous** version, calculate the derivative with **finite differences**:
+
+<p align="center">
+    <img src="https://latex.codecogs.com/svg.latex?D_{out}&space;=&space;K_d&space;\;&space;\frac{e(t)&space;-&space;e(t-1)}{\Delta&space;t}" title="D_{out} = K_d \; \frac{e(t) - e(t-1)}{\Delta t}" />
+</p>
+
 #### Finishing up PID: Adding the derivative controller
 Now that we've got both proportional and integral, its time to add the final part: derivative.
+
+#### Putting it all together
+The PID controller is just the three controllers above combined, and stands for (as you've probably guessed)
+*Proportional, Integral, Derivative*.
+
+And by putting the three equations for control output above, we get:
+
+<p align="center">
+    <img src="https://latex.codecogs.com/svg.latex?u(t)&space;=&space;K_\text{p}&space;\,&space;e(t)&space;&plus;&space;K_\text{i}&space;\,&space;\int_0^t&space;e(\tau)&space;\,d\tau&space;&plus;&space;K_\text{d}&space;\,&space;\frac{d\,&space;e(t)}{dt}"
+    title="u(t) = K_\text{p} \, e(t) + K_\text{i} \, \int_0^t e(\tau) \,d\tau + K_\text{d} \, \frac{d\, e(t)}{dt}" />
+</p>
+
+where **u** stands for the _control output_.
 
 And that's it for this week! We've learnt about `roslaunch` and `.launch` files, ROS parameters, PID control and
 basic control theory, and we've written our own PID controller for the simulator. [Next week](week4.md) we'll learn
